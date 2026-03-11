@@ -52,8 +52,8 @@ def main() -> int:
             rc_any = p.returncode
 
     # Use official OpenClaw security audit (no wheel re-invention):
-    # - persist JSON evidence for later review
-    # - DO NOT change configuration (monitor-only)
+    # - persist JSON evidence
+    # - if critical>0: push alert to main session (user-facing)
     try:
         audit = subprocess.run(
             ['openclaw', 'security', 'audit', '--deep', '--json'],
@@ -72,11 +72,34 @@ def main() -> int:
             rep = ROOT / 'reports'
             rep.mkdir(exist_ok=True)
             ts = _time.strftime('%Y%m%d-%H%M%S')
-            (rep / f'openclaw-security-audit-{ts}.json').write_text(
+            audit_path = rep / f'openclaw-security-audit-{ts}.json'
+            audit_path.write_text(
                 _json.dumps(data, ensure_ascii=False, indent=2),
                 encoding='utf-8'
             )
-        # Do not fail the job on findings; keep it silent and stable.
+
+            crit = int((data.get('summary') or {}).get('critical') or 0)
+            if crit > 0:
+                # Push alert to main session (danger/virus detected)
+                findings = [f['title'] for f in data.get('findings', []) if f.get('severity') == 'critical'][:5]
+                alert_lines = [
+                    "🚨 **Guardrails 发现高危风险**",
+                    f"- critical: {crit}",
+                ]
+                for f in findings:
+                    alert_lines.append(f"  - {f}")
+                alert_lines.append(f"- 完整报告：{audit_path}")
+                alert_text = "\n".join(alert_lines)
+                try:
+                    subprocess.run(['openclaw', 'system', 'event', '--mode', 'now', '--text', alert_text], timeout=30)
+                except Exception:
+                    pass
+        else:
+            # couldn't parse json; push error alert
+            try:
+                subprocess.run(['openclaw', 'system', 'event', '--mode', 'now', '--text', '🚨 Guardrails 审计失败：无法解析 openclaw security audit JSON'], timeout=30)
+            except Exception:
+                pass
     except Exception:
         pass
 

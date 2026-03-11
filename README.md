@@ -35,11 +35,14 @@ python3 scripts/run_daily.py
 ## Enable daily silent monitoring (recommended)
 
 Creates/updates a Gateway cron job (`guardrails:daily`) that runs once per day and writes artifacts under `reports/`.
-No chat messages.
+
+**Alert behavior:**
+- Normal days: silent (no messages)
+- When critical risks detected: pushes an alert to the main session via `openclaw system event`
 
 ```bash
 openclaw cron add --name guardrails:daily --cron "17 3 * * *" --session isolated --light-context --no-deliver \
-  --message "Daily guardrails (silent): exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py (fallback: python). Save artifacts under ~/.openclaw/skills/openclaw-guardrails/reports/. No chat messages."
+  --message "Daily guardrails: exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py (fallback: python). Save artifacts under reports/. Alert on critical."
 ```
 
 ## What this repo contains
