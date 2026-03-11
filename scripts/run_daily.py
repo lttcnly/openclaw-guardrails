@@ -51,32 +51,42 @@ def main() -> int:
         if p.returncode != 0:
             rc_any = p.returncode
 
-    # Leverage official OpenClaw security audit (no wheel re-invention): fail the job if critical>0
+    # Leverage official OpenClaw security audit (no wheel re-invention):
+    # - persist JSON evidence
+    # - fail the job if critical>0 (so cron failure-alert can notify)
     try:
         audit = subprocess.run(
             ['openclaw', 'security', 'audit', '--deep', '--json'],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=180,
         )
-        out = (audit.stdout or '') + "\n" + (audit.stderr or '')
-        i = out.find('{')
-        if i >= 0:
+        mixed = (audit.stdout or '') + "\n" + (audit.stderr or '')
+        j = mixed.find('{')
+        if j >= 0:
             import json as _json
-            data = _json.loads(out[i:])
-            crit = int((data.get('summary') or {}).get('critical') or 0)
+            # openclaw may print extra text after JSON; parse first JSON object only
+            decoder = _json.JSONDecoder()
+            data, _end = decoder.raw_decode(mixed[j:])
+
             # persist official audit json for evidence
-            from pathlib import Path as _Path
             import time as _time
             rep = ROOT / 'reports'
             rep.mkdir(exist_ok=True)
             ts = _time.strftime('%Y%m%d-%H%M%S')
-            (rep / f'openclaw-security-audit-{ts}.json').write_text(_json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+            (rep / f'openclaw-security-audit-{ts}.json').write_text(
+                _json.dumps(data, ensure_ascii=False, indent=2),
+                encoding='utf-8'
+            )
+
+            crit = int((data.get('summary') or {}).get('critical') or 0)
             if crit > 0:
-                # make job fail so cron failure-alert can notify user
                 rc_any = max(rc_any, 2)
+        else:
+            # couldn't locate json; count as error
+            rc_any = max(rc_any, 2)
     except Exception:
-        pass
+        rc_any = max(rc_any, 2)
 
     return rc_any
 
