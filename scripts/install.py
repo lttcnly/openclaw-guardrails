@@ -31,15 +31,32 @@ def run(cmd: list[str]) -> int:
     return p.returncode
 
 
-def cron_cmds() -> list[list[str]]:
-    # conservative defaults:
-    # - skills scan daily at ~03:17 local time (stagger still applies unless --exact)
-    # - audit weekly Monday 03:27 local time
-    # - config extract daily 03:37
+def cron_cmds(repo_root: Path) -> list[list[str]]:
+    """Cron plan.
+
+    We schedule ONE daily job to reduce complexity and make it portable.
+
+    Note: OpenClaw cron executes an *agent turn*. We therefore instruct the agent
+    to run a local, read-only command via exec.
+    """
+    run_daily = str(repo_root / "scripts" / "run_daily.py")
+    msg = (
+        "Run daily guardrails read-only checks. "
+        "Use exec to run: "
+        f"{sys.executable} {run_daily}"
+    )
+
     return [
-        ["openclaw", "cron", "add", "--name", "guardrails:skills-scan", "--cron", "17 3 * * *", "--message", "(guardrails) skills supply-chain scan", "--system-event", "guardrails:skills-scan"],
-        ["openclaw", "cron", "add", "--name", "guardrails:audit", "--cron", "27 3 * * 1", "--message", "(guardrails) weekly read-only audit", "--system-event", "guardrails:audit"],
-        ["openclaw", "cron", "add", "--name", "guardrails:config", "--cron", "37 3 * * *", "--message", "(guardrails) config redaction snapshot", "--system-event", "guardrails:config"],
+        [
+            "openclaw", "cron", "add",
+            "--name", "guardrails:daily",
+            "--cron", "17 3 * * *",
+            "--session", "isolated",
+            "--light-context",
+            "--no-deliver",
+            "--timeout-seconds", "900",
+            "--message", msg,
+        ]
     ]
 
 
@@ -63,7 +80,7 @@ def main() -> int:
     run([sys.executable, str(ROOT / "scripts" / "config_extract.py")])
     run([sys.executable, str(ROOT / "scripts" / "audit.py")])
 
-    cmds = cron_cmds()
+    cmds = cron_cmds(ROOT)
 
     print("\n[guardrails] cron plan (optional):")
     for c in cmds:

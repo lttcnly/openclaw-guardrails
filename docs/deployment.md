@@ -22,9 +22,9 @@ cd "$env:USERPROFILE\.openclaw\skills\openclaw-guardrails"
 python scripts\audit.py
 ```
 
-## Optional: schedule periodic audits (cross-platform)
+## Optional: schedule daily audits (cross-platform)
 
-This uses the OpenClaw Gateway scheduler (`openclaw cron`).
+This uses the OpenClaw Gateway scheduler (`openclaw cron`). Default cadence: once per day.
 
 Print a plan (no changes):
 
