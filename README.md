@@ -29,7 +29,17 @@ python3 scripts/config_extract.py
 ```bash
 git clone <REPO_URL> ~/.openclaw/skills/openclaw-guardrails
 cd ~/.openclaw/skills/openclaw-guardrails
-python3 scripts/audit.py
+python3 scripts/run_daily.py
+```
+
+## Enable daily silent monitoring (recommended)
+
+Creates/updates a Gateway cron job (`guardrails:daily`) that runs once per day and writes artifacts under `reports/`.
+No chat messages.
+
+```bash
+openclaw cron add --name guardrails:daily --cron "17 3 * * *" --session isolated --light-context --no-deliver \
+  --message "Daily guardrails (silent): exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py (fallback: python). Save artifacts under ~/.openclaw/skills/openclaw-guardrails/reports/. No chat messages."
 ```
 
 ## What this repo contains
