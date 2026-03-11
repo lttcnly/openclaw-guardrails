@@ -10,10 +10,26 @@ Goal: reduce real-world risk in 4 areas:
 
 ## Quickstart
 
-Run a read-only baseline audit (recommended first):
+macOS/Linux (bash):
 
 ```bash
 ./scripts/audit.sh
+```
+
+Cross-platform (recommended):
+
+```bash
+python3 scripts/audit.py
+python3 scripts/skills_scan.py
+python3 scripts/config_extract.py
+```
+
+## Install into OpenClaw (so it becomes a skill)
+
+```bash
+git clone <REPO_URL> ~/.openclaw/skills/openclaw-guardrails
+cd ~/.openclaw/skills/openclaw-guardrails
+python3 scripts/audit.py
 ```
 
 ## What this repo contains
