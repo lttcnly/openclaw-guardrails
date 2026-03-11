@@ -1,0 +1,4 @@
+reports/
+.git/
+*.md.bak
+*.log
