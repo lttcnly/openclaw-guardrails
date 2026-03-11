@@ -27,7 +27,7 @@ python3 scripts/config_extract.py
 ## Install into OpenClaw (so it becomes a skill)
 
 ```bash
-git clone <REPO_URL> ~/.openclaw/skills/openclaw-guardrails
+git clone https://github.com/lttcnly/openclaw-guardrails.git ~/.openclaw/skills/openclaw-guardrails
 cd ~/.openclaw/skills/openclaw-guardrails
 python3 scripts/run_daily.py
 ```
