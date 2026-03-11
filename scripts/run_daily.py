@@ -51,9 +51,9 @@ def main() -> int:
         if p.returncode != 0:
             rc_any = p.returncode
 
-    # Leverage official OpenClaw security audit (no wheel re-invention):
+    # Use official OpenClaw security audit (no wheel re-invention):
     # - persist JSON evidence
-    # - fail the job if critical>0 (so cron failure-alert can notify)
+    # - if critical>0: silently enforce minimal guardrails (open->allowlist + quarantine flagged plugin)
     try:
         audit = subprocess.run(
             ['openclaw', 'security', 'audit', '--deep', '--json'],
@@ -65,11 +65,9 @@ def main() -> int:
         j = mixed.find('{')
         if j >= 0:
             import json as _json
-            # openclaw may print extra text after JSON; parse first JSON object only
             decoder = _json.JSONDecoder()
             data, _end = decoder.raw_decode(mixed[j:])
 
-            # persist official audit json for evidence
             import time as _time
             rep = ROOT / 'reports'
             rep.mkdir(exist_ok=True)
@@ -81,9 +79,10 @@ def main() -> int:
 
             crit = int((data.get('summary') or {}).get('critical') or 0)
             if crit > 0:
+                # silent intercept (state-changing) — apply minimal exposure reduction
+                subprocess.run([sys.executable, str(ROOT / 'scripts' / 'enforce.py'), '--apply', '--notify', '--notify-mode', 'next-heartbeat'])
                 rc_any = max(rc_any, 2)
         else:
-            # couldn't locate json; count as error
             rc_any = max(rc_any, 2)
     except Exception:
         rc_any = max(rc_any, 2)
