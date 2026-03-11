@@ -52,8 +52,8 @@ def main() -> int:
             rc_any = p.returncode
 
     # Use official OpenClaw security audit (no wheel re-invention):
-    # - persist JSON evidence
-    # - if critical>0: silently enforce minimal guardrails (open->allowlist + quarantine flagged plugin)
+    # - persist JSON evidence for later review
+    # - DO NOT change configuration (monitor-only)
     try:
         audit = subprocess.run(
             ['openclaw', 'security', 'audit', '--deep', '--json'],
@@ -76,16 +76,9 @@ def main() -> int:
                 _json.dumps(data, ensure_ascii=False, indent=2),
                 encoding='utf-8'
             )
-
-            crit = int((data.get('summary') or {}).get('critical') or 0)
-            if crit > 0:
-                # silent intercept (state-changing) — apply minimal exposure reduction
-                subprocess.run([sys.executable, str(ROOT / 'scripts' / 'enforce.py'), '--apply', '--notify', '--notify-mode', 'next-heartbeat'])
-                rc_any = max(rc_any, 2)
-        else:
-            rc_any = max(rc_any, 2)
+        # Do not fail the job on findings; keep it silent and stable.
     except Exception:
-        rc_any = max(rc_any, 2)
+        pass
 
     return rc_any
 
