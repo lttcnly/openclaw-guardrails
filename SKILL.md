@@ -1,45 +1,115 @@
 ---
 name: openclaw-guardrails
-description: Cross-platform, read-only security audit + guardrails kit for OpenClaw deployments (prompt-injection, mis-ops, skill supply-chain, exposure posture). Use when a user asks to audit/harden OpenClaw, assess skills risk, or reduce prompt-injection/destructive action risk.
+description: Silent security monitoring for OpenClaw deployments. Daily scans (official audit + supply-chain + vuln), risk scoring (0-100), alert deduplication, and one-click fixes. Use when you need continuous security posture monitoring without noise.
+metadata:
+  {
+    "clawdbot":
+      {
+        "emoji": "🛡️",
+        "requires": { "bins": ["openclaw", "python3"] },
+        "os": ["linux", "darwin", "win32"],
+      },
+  }
 ---
 
-# OpenClaw Guardrails (Skill)
+# OpenClaw Guardrails
 
-This repository doubles as an OpenClaw skill folder.
+**Silent security monitoring** for OpenClaw deployments. Runs daily scans, calculates risk score (0-100), and alerts only when critical risks are detected.
 
-## What it does (default: read-only)
+## When to Use
 
-- Runs OpenClaw + host posture checks and saves reports.
-- Scans installed skills for risky patterns (static analysis).
-- Extracts a redacted OpenClaw config summary.
+- You want **continuous security monitoring** without daily noise
+- You need **risk scoring** to track security posture over time
+- You want **alert deduplication** (only new critical findings trigger alerts)
+- You need **supply-chain integrity** checks (hash pinning + verify)
 
-## How to run
-
-From the repo root:
-
-```bash
-./scripts/audit.sh            # macOS-friendly (bash)
-python3 scripts/audit.py      # cross-platform audit (preferred)
-python3 scripts/skills_scan.py
-python3 scripts/config_extract.py
-```
-
-## One-liner install (recommended)
-
-Clone into `~/.openclaw/skills/` so OpenClaw can discover it:
+## Installation
 
 ```bash
-git clone <REPO_URL> ~/.openclaw/skills/openclaw-guardrails
-```
+# Clone to OpenClaw skills directory
+git clone https://github.com/lttcnly/openclaw-guardrails.git ~/.openclaw/skills/openclaw-guardrails
 
-Then run audits:
-
-```bash
+# Run once to verify
 cd ~/.openclaw/skills/openclaw-guardrails
-python3 scripts/audit.py
+python3 scripts/run_daily.py
 ```
 
-## Safety
+## Enable Daily Monitoring
 
-- No destructive actions by default.
-- Any hardening steps should be presented as a plan and require explicit approval.
+Creates a cron job that runs at 03:17 daily:
+
+```bash
+openclaw cron add --name guardrails:daily --cron "17 3 * * *" --session isolated --light-context --no-deliver \
+  --message "Daily guardrails: exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py (fallback: python). Save artifacts under reports/. Alert on critical."
+```
+
+## What It Scans
+
+| Layer | Tool | Output |
+|-------|------|--------|
+| Official Audit | `openclaw security audit --deep` | `reports/openclaw-security-audit-*.json` |
+| Skills Supply-Chain | Custom static scan | `reports/skills-scan-*.json/.md` |
+| Config Snapshot | Redacted extract | `reports/openclaw-config-redacted-*.json` |
+| Cross-Platform Audit | Custom checks | `reports/audit-*.txt/.json` |
+| SBOM | Asset inventory | `reports/sbom-*.json` |
+| Dependency Vulns | `npm audit` / `pip-audit` | `reports/vuln-scan-*.json` |
+| Hash Pinning | SHA256 baseline | `reports/skill-hashes-baseline.json` |
+| **Risk Score** | Weighted calculation | `reports/risk-score-*.json` |
+| **Summary** | Human-readable | `reports/summary-*.md` |
+
+## Alert Behavior
+
+| Scenario | Behavior |
+|----------|----------|
+| Normal day | Silent (no messages) |
+| Critical detected | Push alert to main session |
+| Same critical recurring | Deduplicated (no repeat alert) |
+| New critical | Alert with "新增" count |
+
+## Risk Score Calculation
+
+| Factor | Deduction | Max |
+|--------|-----------|-----|
+| Each critical | -20 pts | -60 |
+| Each warn | -5 pts | -20 |
+| Each HIGH skill flag | -10 pts | -20 |
+| Each vuln (high/critical) | -10 pts | -20 |
+
+**Risk Levels:**
+- 🟢 80-100: LOW
+- 🟡 60-79: MEDIUM
+- 🟠 40-59: HIGH
+- 🔴 0-39: CRITICAL
+
+## One-Click Fixes (Coming Soon)
+
+Future version will include remediation commands for common findings:
+- `groupPolicy="open"` → `allowlist`
+- Plugin quarantine
+- Tool exposure reduction
+
+## Files Structure
+
+```
+openclaw-guardrails/
+├── SKILL.md
+├── README.md
+├── scripts/
+│   ├── run_daily.py          # Main entry point
+│   ├── skills_scan.py        # Supply-chain scan
+│   ├── audit.py              # Cross-platform audit
+│   ├── sbom.py               # Asset inventory
+│   ├── vuln_scan.py          # Dependency vulns
+│   ├── hash_pin.py           # Baseline generation
+│   ├── hash_verify.py        # Baseline verification
+│   ├── risk_score.py         # Risk calculation
+│   └── enforce.py            # Auto-remediation (optional)
+└── reports/                  # Artifacts (gitignored)
+```
+
+## Notes
+
+- **Read-only by default**: Does not modify system configuration
+- **Alert deduplication**: Only new critical findings trigger alerts
+- **Cross-platform**: Works on macOS, Linux, Windows
+- **Silent operation**: No daily spam, only alerts on real risks

@@ -27,6 +27,7 @@ STEPS = [
     [sys.executable, str(ROOT / "scripts" / "audit.py")],
     [sys.executable, str(ROOT / "scripts" / "sbom.py")],
     [sys.executable, str(ROOT / "scripts" / "vuln_scan.py")],
+    [sys.executable, str(ROOT / "scripts" / "risk_score.py")],
 ]
 
 
@@ -80,20 +81,38 @@ def main() -> int:
 
             crit = int((data.get('summary') or {}).get('critical') or 0)
             if crit > 0:
-                # Push alert to main session (danger/virus detected)
-                findings = [f['title'] for f in data.get('findings', []) if f.get('severity') == 'critical'][:5]
-                alert_lines = [
-                    "🚨 **Guardrails 发现高危风险**",
-                    f"- critical: {crit}",
-                ]
-                for f in findings:
-                    alert_lines.append(f"  - {f}")
-                alert_lines.append(f"- 完整报告：{audit_path}")
-                alert_text = "\n".join(alert_lines)
-                try:
-                    subprocess.run(['openclaw', 'system', 'event', '--mode', 'now', '--text', alert_text], timeout=30)
-                except Exception:
-                    pass
+                # Dedup: only alert if new critical findings (compare to last alert)
+                last_alert_path = rep / "last-alert-critical.json"
+                last_criticals = set()
+                if last_alert_path.exists():
+                    try:
+                        last_data = json.loads(last_alert_path.read_text())
+                        last_criticals = {f"{f['checkId']}:{f['title']}" for f in last_data.get('findings', [])}
+                    except Exception:
+                        pass
+
+                current_criticals = [f for f in data.get('findings', []) if f.get('severity') == 'critical']
+                current_set = {f"{f['checkId']}:{f['title']}" for f in current_criticals}
+
+                # Only alert if there are NEW criticals
+                new_criticals = current_set - last_criticals
+                if new_criticals or not last_alert_path.exists():
+                    findings = [f['title'] for f in current_criticals[:5]]
+                    alert_lines = [
+                        "🚨 **Guardrails 发现高危风险**",
+                        f"- critical: {crit}",
+                        f"- 新增：{len(new_criticals) if new_criticals else crit}",
+                    ]
+                    for f in findings:
+                        alert_lines.append(f"  - {f}")
+                    alert_lines.append(f"- 完整报告：{audit_path}")
+                    alert_text = "\n".join(alert_lines)
+                    try:
+                        subprocess.run(['openclaw', 'system', 'event', '--mode', 'now', '--text', alert_text], timeout=30)
+                        # Save current criticals for next dedup
+                        last_alert_path.write_text(json.dumps({'findings': current_criticals, 'time': time.strftime('%Y-%m-%d %H:%M:%S')}, ensure_ascii=False, indent=2))
+                    except Exception:
+                        pass
         else:
             # couldn't parse json; push error alert
             try:
