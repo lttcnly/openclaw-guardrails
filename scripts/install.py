@@ -76,9 +76,7 @@ def main() -> int:
 
     # Always run local scripts once (read-only)
     print("[guardrails] running one-time read-only checks...")
-    run([sys.executable, str(ROOT / "scripts" / "skills_scan.py")])
-    run([sys.executable, str(ROOT / "scripts" / "config_extract.py")])
-    run([sys.executable, str(ROOT / "scripts" / "audit.py")])
+    run([sys.executable, str(ROOT / "scripts" / "run_daily.py")])
 
     cmds = cron_cmds(ROOT)
 

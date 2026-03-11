@@ -18,19 +18,38 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+BASELINE = ROOT / "reports" / "skill-hashes-baseline.json"
+
 STEPS = [
     [sys.executable, str(ROOT / "scripts" / "skills_scan.py")],
     [sys.executable, str(ROOT / "scripts" / "config_extract.py")],
     [sys.executable, str(ROOT / "scripts" / "audit.py")],
+    [sys.executable, str(ROOT / "scripts" / "sbom.py")],
+    [sys.executable, str(ROOT / "scripts" / "vuln_scan.py")],
 ]
 
 
 def main() -> int:
     rc_any = 0
+
+    # Pin baseline if missing
+    if not BASELINE.exists():
+        print(f"[guardrails] baseline missing; pinning -> {BASELINE}")
+        p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'hash_pin.py'), '--out', str(BASELINE)])
+        if p.returncode != 0:
+            rc_any = p.returncode
+
     for cmd in STEPS:
         p = subprocess.run(cmd)
         if p.returncode != 0:
             rc_any = p.returncode
+
+    # Verify against baseline
+    if BASELINE.exists():
+        p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'hash_verify.py'), '--baseline', str(BASELINE)])
+        if p.returncode != 0:
+            rc_any = p.returncode
+
     return rc_any
 
 

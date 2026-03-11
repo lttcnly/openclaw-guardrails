@@ -28,7 +28,7 @@ REPORTS = ROOT / "reports"
 REPORTS.mkdir(parents=True, exist_ok=True)
 
 TS = time.strftime("%Y%m%d-%H%M%S")
-OUT = REPORTS / f"skill-hashes-{TS}.json"
+OUT_DEFAULT = REPORTS / f"skill-hashes-{TS}.json"
 
 DEFAULT_ROOTS = [
     Path.home() / ".openclaw" / "skills",
@@ -56,6 +56,13 @@ def skill_name(root: Path, file_path: Path) -> str:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", help="Output path (default: timestamped under reports/)")
+    args = ap.parse_args()
+
+    out_path = Path(args.out).expanduser() if args.out else OUT_DEFAULT
+
     manifest: Dict[str, Any] = {
         "time": time.strftime("%Y-%m-%d %H:%M:%S"),
         "roots": [str(p) for p in DEFAULT_ROOTS],
@@ -89,8 +96,9 @@ def main() -> int:
     for name in list(manifest["skills"].keys()):
         manifest["skills"][name]["files"] = sorted(manifest["skills"][name]["files"], key=lambda x: x["path"])
 
-    OUT.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Saved: {OUT}")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"Saved: {out_path}")
     print(f"Skills: {len(manifest['skills'])}")
     return 0
 
