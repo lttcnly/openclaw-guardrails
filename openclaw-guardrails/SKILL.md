@@ -1,18 +1,27 @@
-# OpenClaw Guardrails 🛡️
+---
+name: openclaw-guardrails
+description: Silent security monitoring for OpenClaw deployments. Daily scans (official audit + supply-chain + vuln), risk scoring (0-100), alert deduplication, and one-click fixes. Use when you need continuous security posture monitoring without noise.
+metadata:
+  {
+    "clawdbot":
+      {
+        "emoji": "🛡️",
+        "requires": { "bins": ["openclaw", "python3"] },
+        "os": ["linux", "darwin", "win32"],
+      },
+  }
+---
+
+# OpenClaw Guardrails
 
 **Silent security monitoring** for OpenClaw deployments. Runs daily scans, calculates risk score (0-100), and alerts only when critical risks are detected.
 
-## Features
+## When to Use
 
-| Feature | Description | Frequency |
-|---------|-------------|-----------|
-| 🔍 **Risk Scoring** | 0-100 score with red/yellow/green levels | Daily |
-| 🔧 **One-Click Fixes** | Remediation commands for each finding | Daily |
-| 🚫 **Pre-Install Scan** | Block dangerous skills before installation | On-demand |
-| 📡 **Threat Intelligence** | CVE/vulnerability monitoring from OSV, npm audit | Daily |
-| 📊 **Config Drift** | Detect unsafe config changes | Daily |
-| 🎯 **Skills Audit** | Detect skill updates and new risks | Weekly (Sun) |
-| 🔐 **Hash Pinning** | Supply-chain integrity verification | Daily |
+- You want **continuous security monitoring** without daily noise
+- You need **risk scoring** to track security posture over time
+- You want **alert deduplication** (only new critical findings trigger alerts)
+- You need **supply-chain integrity** checks (hash pinning + verify)
 
 ## Installation
 
@@ -34,33 +43,6 @@ openclaw cron add --name guardrails:daily --cron "17 3 * * *" --session isolated
   --message "Daily guardrails: exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py (fallback: python). Save artifacts under reports/. Alert on critical."
 ```
 
-## Pre-install Scan (Recommended)
-
-Before installing any skill from ClawHub, scan it first:
-
-```bash
-# Scan a skill folder before installation
-python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py <skill-folder>
-
-# Exit codes:
-# 0 = Safe to install
-# 1 = Warning (review recommended)
-# 2 = Blocked (critical risk detected)
-```
-
-**Example:**
-```bash
-# Scan feishu-openclaw-plugin
-python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py \
-  ~/.openclaw/extensions/feishu-openclaw-plugin
-
-# Output:
-# 🚨 BLOCKED - Critical patterns detected:
-#   - src/core/token-store.js: shell_exec, credential_access
-#   - src/tools/mcp/shared.js: env_harvesting, network_exfil
-# Recommendation: Do NOT install this skill.
-```
-
 ## What It Scans
 
 | Layer | Tool | Output |
@@ -71,9 +53,6 @@ python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py \
 | Cross-Platform Audit | Custom checks | `reports/audit-*.txt/.json` |
 | SBOM | Asset inventory | `reports/sbom-*.json` |
 | Dependency Vulns | `npm audit` / `pip-audit` | `reports/vuln-scan-*.json` |
-| Threat Intel | OSV.dev API | `reports/threat-intel-*.json/.md` |
-| Config Drift | Baseline comparison | `reports/config-drift-*.json/.md` |
-| Skills Audit | Weekly behavior scan | `reports/skills-audit-*.json/.md` |
 | Hash Pinning | SHA256 baseline | `reports/skill-hashes-baseline.json` |
 | **Risk Score** | Weighted calculation | `reports/risk-score-*.json` |
 | **Summary** | Human-readable | `reports/summary-*.md` |
@@ -102,30 +81,19 @@ python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py \
 - 🟠 40-59: HIGH
 - 🔴 0-39: CRITICAL
 
-## Example Output
+## One-Click Fixes (Coming Soon)
 
-```markdown
-# Guardrails Risk Summary
-**Time**: 2026-03-12 00:29:11
-**Score**: 🔴 20/100 (CRITICAL)
-
-## Critical Findings
-- Open groupPolicy with elevated tools enabled
-- Open groupPolicy with runtime/filesystem tools exposed
-- Plugin "feishu-openclaw-plugin" contains dangerous code patterns
-
-## 🔧 Quick Fixes
-**Fix**: `openclaw config set channels.discord.accounts.default.groupPolicy=allowlist`
-**Fix**: Set `agents.defaults.sandbox.mode=all` and `tools.fs.workspaceOnly=true`
-**Fix**: `openclaw plugins disable feishu-openclaw-plugin`
-```
+Future version will include remediation commands for common findings:
+- `groupPolicy="open"` → `allowlist`
+- Plugin quarantine
+- Tool exposure reduction
 
 ## Files Structure
 
 ```
 openclaw-guardrails/
-├── README.md
 ├── SKILL.md
+├── README.md
 ├── scripts/
 │   ├── run_daily.py          # Main entry point
 │   ├── skills_scan.py        # Supply-chain scan
@@ -134,11 +102,8 @@ openclaw-guardrails/
 │   ├── vuln_scan.py          # Dependency vulns
 │   ├── hash_pin.py           # Baseline generation
 │   ├── hash_verify.py        # Baseline verification
-│   ├── risk_score.py         # Risk calculation + fixes
-│   ├── preinstall_scan.py    # Pre-install blocker
-│   ├── threat_intel.py       # CVE monitoring (NEW)
-│   ├── config_drift.py       # Config drift (NEW)
-│   └── skills_audit.py       # Weekly audit (NEW)
+│   ├── risk_score.py         # Risk calculation
+│   └── enforce.py            # Auto-remediation (optional)
 └── reports/                  # Artifacts (gitignored)
 ```
 
@@ -148,8 +113,3 @@ openclaw-guardrails/
 - **Alert deduplication**: Only new critical findings trigger alerts
 - **Cross-platform**: Works on macOS, Linux, Windows
 - **Silent operation**: No daily spam, only alerts on real risks
-- **Weekly skills audit**: Runs every Sunday to detect skill updates
-
-## License
-
-MIT
