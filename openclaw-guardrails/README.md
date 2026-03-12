@@ -27,7 +27,17 @@
 
 ## 🚀 Quick Start
 
-### One-Click Install (Recommended)
+### Method 1: From ClawHub (If Available)
+
+```bash
+clawhub install openclaw-guardrails
+```
+
+> ⚠️ **Note**: ClawHub may have file size limits. If installation fails, use Method 2.
+
+---
+
+### Method 2: From GitHub (Recommended ✅)
 
 **macOS / Linux:**
 ```bash

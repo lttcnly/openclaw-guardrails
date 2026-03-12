@@ -1,0 +1,42 @@
+# ClawHub ignore file
+# Files and folders to exclude from upload
+
+# Large files
+*.log
+*.bak
+*.tmp
+
+# Development files
+.git/
+.gitignore
+
+# Local config
+.clawhub/
+
+# Reports (generated at runtime)
+reports/
+
+# Documentation (keep only essential)
+PUBLISH.md
+
+# Test files
+*.test.py
+*.spec.py
+test/
+tests/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
