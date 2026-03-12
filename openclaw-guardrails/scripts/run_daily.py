@@ -69,6 +69,19 @@ def main() -> int:
         if p.returncode != 0:
             rc_any = p.returncode
 
+    # Monthly trend analysis (only on 1st of month)
+    if _time.strftime('%d') == '01':
+        print("[guardrails] Running monthly trend analysis...")
+        p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'trend_analysis.py')])
+        if p.returncode != 0:
+            rc_any = p.returncode
+
+    # Report cleanup (daily, keep disk usage reasonable)
+    print("[guardrails] Running report cleanup...")
+    p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'cleanup_reports.py')])
+    if p.returncode != 0:
+        rc_any = p.returncode
+
     # Verify against baseline (supply-chain tampering detector)
     if BASELINE.exists():
         p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'hash_verify.py'), '--baseline', str(BASELINE)])

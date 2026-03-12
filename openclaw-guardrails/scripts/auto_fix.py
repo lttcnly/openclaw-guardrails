@@ -80,8 +80,12 @@ def load_threat_intel() -> List[Dict]:
         return []
 
 
-def auto_fix_config(drifts: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+def auto_fix_config(drifts: List[Dict], execute: bool = False) -> Tuple[List[Dict], List[Dict]]:
     """Auto-fix configuration drifts.
+    
+    Args:
+        drifts: List of configuration drifts
+        execute: If True, actually execute fixes. If False, simulate only.
     
     Returns:
         (fixed, failed) lists
@@ -109,33 +113,57 @@ def auto_fix_config(drifts: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
         cli_cmd = f"openclaw config set {path}={json.dumps(expected)}"
         print(f"  - Auto-fixing: {path} ({current} → {expected})")
 
-        try:
-            # For now, just log the command (don't actually execute)
-            # In production, you would:
-            # result = subprocess.run(cli_cmd.split(), capture_output=True, text=True, timeout=30)
-            # if result.returncode == 0:
-            #     fixed.append({...})
-            # else:
-            #     failed.append({...})
-
+        if not execute:
+            # Simulate only
             fixed.append({
                 "path": path,
                 "from": current,
                 "to": expected,
                 "command": cli_cmd,
-                "status": "simulated",  # Change to "executed" when actually running
+                "status": "simulated",
             })
+            continue
+
+        try:
+            # Actually execute
+            result = subprocess.run(
+                cli_cmd.split(),
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                fixed.append({
+                    "path": path,
+                    "from": current,
+                    "to": expected,
+                    "command": cli_cmd,
+                    "status": "executed",
+                    "output": result.stdout.strip(),
+                })
+            else:
+                failed.append({
+                    "path": path,
+                    "command": cli_cmd,
+                    "error": result.stderr.strip(),
+                    "status": "failed",
+                })
         except Exception as e:
             failed.append({
                 "path": path,
                 "error": str(e),
+                "status": "exception",
             })
 
     return fixed, failed
 
 
-def auto_upgrade_deps(vulns: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+def auto_upgrade_deps(vulns: List[Dict], execute: bool = False) -> Tuple[List[Dict], List[Dict]]:
     """Auto-upgrade vulnerable dependencies.
+    
+    Args:
+        vulns: List of vulnerabilities
+        execute: If True, actually execute upgrades. If False, simulate only.
     
     Returns:
         (upgraded, failed) lists
@@ -165,12 +193,9 @@ def auto_upgrade_deps(vulns: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
         for src, packages in sources.items():
             print(f"  - Upgrading {eco} deps in {src}: {', '.join(packages[:5])}")
 
-            try:
+            if not execute:
+                # Simulate only
                 cmd = cmd_template.format(path=src)
-                # For now, just log (don't actually execute)
-                # In production:
-                # result = subprocess.run(cmd.split(), capture_output=True, text=True, timeout=120)
-
                 upgraded.append({
                     "ecosystem": eco,
                     "source": src,
@@ -178,11 +203,40 @@ def auto_upgrade_deps(vulns: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
                     "command": cmd,
                     "status": "simulated",
                 })
+                continue
+
+            try:
+                cmd = cmd_template.format(path=src)
+                result = subprocess.run(
+                    cmd.split(),
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                    cwd=src,
+                )
+                if result.returncode == 0:
+                    upgraded.append({
+                        "ecosystem": eco,
+                        "source": src,
+                        "packages": packages[:10],
+                        "command": cmd,
+                        "status": "executed",
+                        "output": result.stdout.strip(),
+                    })
+                else:
+                    failed.append({
+                        "ecosystem": eco,
+                        "source": src,
+                        "command": cmd,
+                        "error": result.stderr.strip(),
+                        "status": "failed",
+                    })
             except Exception as e:
                 failed.append({
                     "ecosystem": eco,
                     "source": src,
                     "error": str(e),
+                    "status": "exception",
                 })
 
     return upgraded, failed
@@ -238,7 +292,18 @@ def gen_md_report(fixed: List, failed: List, upgraded: List, upgrade_failed: Lis
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="Auto-remediation for OpenClaw security issues")
+    ap.add_argument("--execute", action="store_true", help="Actually execute fixes (default: simulate only)")
+    ap.add_argument("--dry-run", action="store_true", help="Simulate only (same as default)")
+    args = ap.parse_args()
+
+    execute = args.execute and not args.dry_run
+
     print("🔧 Running auto-remediation...")
+    if not execute:
+        print("⚠️  DRY RUN MODE - No changes will be made")
+        print("   Use --execute to actually apply fixes\n")
 
     all_fixed = []
     all_failed = []
@@ -256,14 +321,14 @@ def main() -> int:
 
     # Auto-fix config
     print("\n  - Auto-fixing configuration...")
-    fixed, failed = auto_fix_config(drifts)
+    fixed, failed = auto_fix_config(drifts, execute=execute)
     all_fixed.extend(fixed)
     all_failed.extend(failed)
     print(f"    Fixed: {len(fixed)}, Failed: {len(failed)}")
 
     # Auto-upgrade deps
     print("\n  - Auto-upgrading dependencies...")
-    upgraded, upgrade_failed = auto_upgrade_deps(vulns)
+    upgraded, upgrade_failed = auto_upgrade_deps(vulns, execute=execute)
     all_upgraded.extend(upgraded)
     all_upgrade_failed.extend(upgrade_failed)
     print(f"    Upgraded: {len(upgraded)}, Failed: {len(upgrade_failed)}")
@@ -274,6 +339,7 @@ def main() -> int:
 
     OUT_JSON.write_text(json.dumps({
         "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "execute_mode": execute,
         "config_fixes": {
             "fixed": all_fixed,
             "failed": all_failed,
@@ -292,6 +358,11 @@ def main() -> int:
 
     print(f"\n✅ Saved: {OUT_JSON}")
     print(f"✅ Saved: {OUT_MD}")
+
+    if execute and (all_fixed or all_upgraded):
+        print("\n🎉 Auto-remediation completed successfully!")
+    elif not execute:
+        print("\n💡 Run with --execute to actually apply these fixes")
 
     return 0
 
