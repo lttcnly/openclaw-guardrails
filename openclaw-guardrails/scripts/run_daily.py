@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "reports" / "skill-hashes-baseline.json"
 
 STEPS = [
-    # Supplementary layers (we do NOT re-implement OpenClaw's official security audit)
+    # Core security scans
     [sys.executable, str(ROOT / "scripts" / "skills_scan.py")],
     [sys.executable, str(ROOT / "scripts" / "config_extract.py")],
     [sys.executable, str(ROOT / "scripts" / "audit.py")],
@@ -29,7 +29,7 @@ STEPS = [
     [sys.executable, str(ROOT / "scripts" / "vuln_scan.py")],
     [sys.executable, str(ROOT / "scripts" / "risk_score.py")],
     
-    # Threat Intelligence
+    # Threat Intelligence (with NVD + GitHub Advisories)
     [sys.executable, str(ROOT / "scripts" / "threat_intel.py")],
     
     # Configuration Drift Detection
@@ -38,11 +38,14 @@ STEPS = [
     # Auto-Fix (attempt remediation)
     [sys.executable, str(ROOT / "scripts" / "auto_fix.py")],
     
-    # Trend Analysis (weekly, on Sundays)
-    # [sys.executable, str(ROOT / "scripts" / "trend_analysis.py")],
-    
     # HTML Dashboard (daily, for web viewing)
     [sys.executable, str(ROOT / "scripts" / "html_dashboard.py")],
+    
+    # Incremental Scan (performance optimization)
+    [sys.executable, str(ROOT / "scripts" / "incremental_scan.py")],
+    
+    # Compliance Check (weekly, on Sundays)
+    # [sys.executable, str(ROOT / "scripts" / "compliance_check.py")],
 ]
 
 
@@ -61,11 +64,18 @@ def main() -> int:
         if p.returncode != 0:
             rc_any = p.returncode
 
-    # Weekly skills audit (only on Sundays)
+    # Weekly tasks (only on Sundays)
     import time as _time
     if _time.strftime('%w') == '0':  # Sunday
-        print("[guardrails] Running weekly skills audit...")
+        print("[guardrails] Running weekly tasks...")
+        
+        print("  - Skills audit...")
         p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'skills_audit.py')])
+        if p.returncode != 0:
+            rc_any = p.returncode
+        
+        print("  - Compliance check...")
+        p = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'compliance_check.py')])
         if p.returncode != 0:
             rc_any = p.returncode
 

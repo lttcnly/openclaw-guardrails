@@ -18,6 +18,7 @@ import json
 import subprocess
 import time
 import urllib.request
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -133,6 +134,71 @@ def scan_osv_vulns() -> List[Dict[str, Any]]:
             pass  # Skip on network errors
 
     return vulns[:50]  # Limit to top 50
+
+
+def scan_nvd_cve() -> List[Dict[str, Any]]:
+    """Query NVD CVE API for recent critical vulnerabilities."""
+    vulns = []
+    try:
+        # NVD API for CVEs from last 7 days with high severity
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=7)
+        
+        url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+        params = {
+            "lastModStartDate": start_date.strftime("%Y-%m-%dT%H:%M:%S"),
+            "lastModEndDate": end_date.strftime("%Y-%m-%dT%H:%M:%S"),
+            "cvssV3Severity": "CRITICAL,HIGH",
+        }
+        
+        query = "&".join(f"{k}={v}" for k, v in params.items())
+        full_url = f"{url}?{query}"
+        
+        req = urllib.request.Request(full_url, headers={"User-Agent": "OpenClaw-Guardrails"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            for cve in result.get("vulnerabilities", [])[:20]:  # Limit to 20
+                cve_data = cve.get("cve", {})
+                vulns.append({
+                    "id": cve_data.get("id", "UNKNOWN"),
+                    "summary": cve_data.get("descriptions", [{}])[0].get("value", ""),
+                    "severity": "critical",
+                    "source": "NVD",
+                    "type": "nvd_cve",
+                })
+    except Exception:
+        pass  # Skip on errors
+
+    return vulns
+
+
+def scan_github_advisories() -> List[Dict[str, Any]]:
+    """Query GitHub Security Advisories for npm/PyPI vulnerabilities."""
+    vulns = []
+    try:
+        url = "https://api.github.com/advisories"
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/vnd.github+json",
+                "User-Agent": "OpenClaw-Guardrails",
+            }
+        )
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            result = json.loads(resp.read().decode())
+            for advisory in result[:20]:  # Limit to 20
+                vulns.append({
+                    "id": advisory.get("ghsa_id", "UNKNOWN"),
+                    "summary": advisory.get("summary", ""),
+                    "severity": advisory.get("severity", "unknown"),
+                    "source": "GitHub Advisories",
+                    "type": "github_advisory",
+                    "ecosystem": advisory.get("ecosystem", "unknown"),
+                })
+    except Exception:
+        pass  # Skip on errors
+
+    return vulns
 
 
 def summarize_vulns(vulns: List[Dict]) -> Dict[str, Any]:
@@ -255,6 +321,18 @@ def main() -> int:
     osv_vulns = scan_osv_vulns()
     all_vulns.extend(osv_vulns)
     print(f"    Found: {len(osv_vulns)}")
+
+    # Query NVD CVE (NEW)
+    print("  - Querying NVD CVE API...")
+    nvd_vulns = scan_nvd_cve()
+    all_vulns.extend(nvd_vulns)
+    print(f"    Found: {len(nvd_vulns)}")
+
+    # Query GitHub Advisories (NEW)
+    print("  - Querying GitHub Security Advisories...")
+    gha_vulns = scan_github_advisories()
+    all_vulns.extend(gha_vulns)
+    print(f"    Found: {len(gha_vulns)}")
 
     # Summarize
     summary = summarize_vulns(all_vulns)
