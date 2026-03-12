@@ -1,31 +1,33 @@
 # OpenClaw Guardrails 🛡️
 
-**企业级 OpenClaw 安全防护系统** - 静默监控、自动修复、合规检查
+**Enterprise-Grade Security Monitoring for OpenClaw** - Silent monitoring, auto-fix, compliance checks
 
 [![GitHub stars](https://img.shields.io/github/stars/lttcnly/openclaw-guardrails)](https://github.com/lttcnly/openclaw-guardrails/stargazers)
 [![License](https://img.shields.io/github/license/lttcnly/openclaw-guardrails)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue)](https://github.com/lttcnly/openclaw-guardrails)
 
----
-
-## 🌟 核心优势
-
-| 优势 | 说明 |
-|------|------|
-| 🤫 **静默监控** | 平时不打扰，只在发现高危风险时推送告警 |
-| 🤖 **自动修复** | 对低风险问题自动修复（如配置漂移、依赖升级） |
-| 📊 **风险评分** | 0-100 分直观展示安全状态（红黄绿灯） |
-| 🔍 **威胁情报** | 集成 OSV + NVD + GitHub 三大漏洞库 |
-| 📋 **合规检查** | 等保 2.0 / CIS Benchmarks 自动检查 |
-| 🚀 **性能优化** | 增量扫描，只扫描变化的文件 |
-| 🧹 **自动清理** | 自动清理过期报告，避免磁盘爆炸 |
-| 🌐 **跨平台** | macOS / Linux / Windows 一键安装 |
+**[🇨🇳 中文文档](README.zh-CN.md)**
 
 ---
 
-## 🚀 快速开始
+## 🌟 Key Features
 
-### 一键安装（推荐）
+| Feature | Description |
+|---------|-------------|
+| 🤫 **Silent Monitoring** | No daily spam, alerts only on critical risks |
+| 🤖 **Auto-Fix** | Automatically fix low-risk issues (config drift, dependency upgrades) |
+| 📊 **Risk Scoring** | 0-100 score with red/yellow/green indicators |
+| 🔍 **Threat Intelligence** | Integrated OSV + NVD + GitHub vulnerability databases |
+| 📋 **Compliance Checks** | MLPS 2.0 / CIS Benchmarks automated checks |
+| 🚀 **Performance** | Incremental scanning, only changed files |
+| 🧹 **Auto Cleanup** | Automatic report retention management |
+| 🌐 **Cross-Platform** | One-click install for macOS / Linux / Windows |
+
+---
+
+## 🚀 Quick Start
+
+### One-Click Install (Recommended)
 
 **macOS / Linux:**
 ```bash
@@ -37,16 +39,16 @@ curl -fsSL https://raw.githubusercontent.com/lttcnly/openclaw-guardrails/main/in
 Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/lttcnly/openclaw-guardrails/main/install.ps1 | Invoke-Expression
 ```
 
-**手动安装:**
+**Manual Install:**
 ```bash
-# 1. Clone 到 OpenClaw skills 目录
+# 1. Clone to OpenClaw skills directory
 git clone https://github.com/lttcnly/openclaw-guardrails.git ~/.openclaw/skills/openclaw-guardrails
 
-# 2. 运行一次验证
+# 2. Run initial scan
 cd ~/.openclaw/skills/openclaw-guardrails
 python3 scripts/run_daily.py
 
-# 3. 创建每日定时任务（可选）
+# 3. Setup daily cron (optional)
 openclaw cron add --name guardrails:daily \
   --cron "17 3 * * *" \
   --session isolated \
@@ -57,62 +59,62 @@ openclaw cron add --name guardrails:daily \
 
 ---
 
-## 📋 功能清单
+## 📋 What's Included
 
-### 每日自动执行
-| 功能 | 脚本 | 说明 |
-|------|------|------|
-| 🔍 风险评分 | `risk_score.py` | 0-100 分，含修复建议 |
-| 📡 威胁情报 | `threat_intel.py` | OSV + NVD + GitHub 三数据源 |
-| 📊 配置漂移 | `config_drift.py` | 检测不安全配置变更 |
-| 🔧 自动修复 | `auto_fix.py` | 自动修复低风险问题 |
-| 🎨 HTML 看板 | `html_dashboard.py` | 交互式仪表盘 |
-| 🧹 报告清理 | `cleanup_reports.py` | 自动删除过期报告 |
-| 🔄 增量扫描 | `incremental_scan.py` | 只扫描变化的文件 |
+### Daily Automated Tasks
+| Task | Script | Description |
+|------|--------|-------------|
+| 🔍 Risk Scoring | `risk_score.py` | 0-100 score with fix suggestions |
+| 📡 Threat Intel | `threat_intel.py` | OSV + NVD + GitHub sources |
+| 📊 Config Drift | `config_drift.py` | Detect unsafe config changes |
+| 🔧 Auto-Fix | `auto_fix.py` | Automatic remediation |
+| 🎨 HTML Dashboard | `html_dashboard.py` | Interactive web dashboard |
+| 🧹 Report Cleanup | `cleanup_reports.py` | Auto-delete old reports |
+| 🔄 Incremental Scan | `incremental_scan.py` | Scan only changed files |
 
-### 每周执行（周日）
-| 功能 | 脚本 | 说明 |
-|------|------|------|
-| 🎯 技能审计 | `skills_audit.py` | 检测技能更新和新风险 |
-| 📋 合规检查 | `compliance_check.py` | 等保 2.0 / CIS 检查 |
+### Weekly Tasks (Sundays)
+| Task | Script | Description |
+|------|--------|-------------|
+| 🎯 Skills Audit | `skills_audit.py` | Detect skill updates and new risks |
+| 📋 Compliance | `compliance_check.py` | MLPS 2.0 / CIS checks |
 
-### 每月执行（1 号）
-| 功能 | 脚本 | 说明 |
-|------|------|------|
-| 📈 趋势分析 | `trend_analysis.py` | 月度风险趋势报告 |
+### Monthly Tasks (1st of month)
+| Task | Script | Description |
+|------|--------|-------------|
+| 📈 Trend Analysis | `trend_analysis.py` | Monthly risk trend report |
 
-### 按需执行
-| 功能 | 脚本 | 说明 |
-|------|------|------|
-| 🚫 安装前扫描 | `preinstall_scan.py` | 拦截高危技能安装 |
-
----
-
-## 📊 风险评分说明
-
-| 分数 | 等级 | 颜色 | 说明 |
-|------|------|------|------|
-| 80-100 | LOW | 🟢 | 安全状态良好 |
-| 60-79 | MEDIUM | 🟡 | 存在中等风险 |
-| 40-59 | HIGH | 🟠 | 存在高风险 |
-| 0-39 | CRITICAL | 🔴 | 严重风险，需立即处理 |
-
-**扣分规则:**
-- 每个 critical 发现：-20 分（最多 -60）
-- 每个 warn 发现：-5 分（最多 -20）
-- 每个 HIGH 技能标记：-10 分（最多 -20）
-- 每个高危漏洞：-10 分（最多 -20）
+### On-Demand
+| Task | Script | Description |
+|------|--------|-------------|
+| 🚫 Pre-Install Scan | `preinstall_scan.py` | Block dangerous skills before install |
 
 ---
 
-## 🛠️ 使用指南
+## 📊 Risk Score Explained
 
-### 查看风险评分
+| Score | Level | Color | Meaning |
+|-------|-------|-------|---------|
+| 80-100 | LOW | 🟢 | Secure |
+| 60-79 | MEDIUM | 🟡 | Moderate risk |
+| 40-59 | HIGH | 🟠 | High risk |
+| 0-39 | CRITICAL | 🔴 | Critical, immediate action required |
+
+**Deduction Rules:**
+- Each critical finding: -20 pts (max -60)
+- Each warning: -5 pts (max -20)
+- Each HIGH skill flag: -10 pts (max -20)
+- Each high/critical vuln: -10 pts (max -20)
+
+---
+
+## 🛠️ Usage Guide
+
+### View Risk Score
 ```bash
 cat ~/.openclaw/skills/openclaw-guardrails/reports/summary-*.md
 ```
 
-### 打开 HTML 看板
+### Open HTML Dashboard
 ```bash
 # macOS
 open ~/.openclaw/skills/openclaw-guardrails/reports/dashboard-*.html
@@ -124,170 +126,144 @@ xdg-open ~/.openclaw/skills/openclaw-guardrails/reports/dashboard-*.html
 start $env:USERPROFILE\.openclaw\skills\openclaw-guardrails\reports\dashboard-*.html
 ```
 
-### 手动运行扫描
+### Manual Scan
 ```bash
 python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py
 ```
 
-### 安装前扫描技能
+### Pre-Install Skill Scan
 ```bash
-# 扫描要安装的技能文件夹
+# Scan a skill folder before installation
 python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py /path/to/skill-folder
 
-# 退出码：
-# 0 = 安全，可以安装
-# 1 = 警告，建议审查
-# 2 = 高危，禁止安装
+# Exit codes:
+# 0 = Safe to install
+# 1 = Warning (review recommended)
+# 2 = Blocked (critical risk detected)
 ```
 
-### 自动修复（模拟模式）
+### Auto-Fix (Dry Run)
 ```bash
-# 默认只模拟，不实际执行
+# Default: simulate only (safe)
 python3 ~/.openclaw/skills/openclaw-guardrails/scripts/auto_fix.py
 
-# 实际执行修复（会修改系统配置）
+# Actually execute fixes (will modify system)
 python3 ~/.openclaw/skills/openclaw-guardrails/scripts/auto_fix.py --execute
 ```
 
-### 查看合规报告
+### View Compliance Report
 ```bash
 cat ~/.openclaw/skills/openclaw-guardrails/reports/compliance-*.md
 ```
 
 ---
 
-## 📁 报告文件说明
+## 📁 Report Files
 
-所有报告保存在 `~/.openclaw/skills/openclaw-guardrails/reports/`
+All reports saved in `~/.openclaw/skills/openclaw-guardrails/reports/`
 
-| 文件 | 说明 | 保留期 |
-|------|------|--------|
-| `summary-*.md` | 风险评分摘要 | 7 天 |
-| `risk-score-*.json` | 风险评分详情 | 7 天 |
-| `threat-intel-*.json` | 威胁情报报告 | 7 天 |
-| `config-drift-*.json` | 配置漂移报告 | 7 天 |
-| `auto-fix-*.json` | 自动修复报告 | 7 天 |
-| `compliance-*.md` | 合规检查报告 | 30 天 |
-| `skills-audit-*.md` | 技能审计报告 | 30 天 |
-| `trend-*.json` | 月度趋势数据 | 12 个月 |
-| `dashboard-*.html` | HTML 看板 | 仅最新 1 个 |
-
----
-
-## 🔧 配置说明
-
-### 自定义风险基线
-
-编辑 `~/.openclaw/skills/openclaw-guardrails/scripts/risk_score.py` 中的 `SECURE_BASELINE`:
-
-```python
-SECURE_BASELINE = {
-    "groupPolicy": "allowlist",  # 期望的安全值
-    "sandbox.mode": "all",
-    "tools.fs.workspaceOnly": True,
-    "gateway.bind": "loopback",
-}
-```
-
-### 自定义告警渠道
-
-编辑 `~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py` 中的告警逻辑，支持：
-- OpenClaw 主会话（默认）
-- 飞书 webhook
-- 钉钉 webhook
-- 邮件（SMTP）
-- 短信（阿里云 SMS）
+| File | Description | Retention |
+|------|-------------|-----------|
+| `summary-*.md` | Risk score summary | 7 days |
+| `risk-score-*.json` | Risk score details | 7 days |
+| `threat-intel-*.json` | Threat intelligence | 7 days |
+| `config-drift-*.json` | Config drift report | 7 days |
+| `auto-fix-*.json` | Auto-fix report | 7 days |
+| `compliance-*.md` | Compliance report | 30 days |
+| `skills-audit-*.md` | Skills audit report | 30 days |
+| `trend-*.json` | Monthly trend data | 12 months |
+| `dashboard-*.html` | HTML dashboard | Latest only |
 
 ---
 
-## 🛡️ 安全边界
+## 🛡️ Security Boundaries
 
-### 自动执行（无需确认）
-- ✅ 依赖升级（`npm update`, `pip install --upgrade`）
-- ✅ 恢复已知安全配置
+### Auto-Execute (No Confirmation)
+- ✅ Dependency upgrades (`npm update`, `pip install --upgrade`)
+- ✅ Restore known safe configs
 
-### 需要确认
-- ⚠️ 卸载技能
-- ⚠️ 修改核心配置（gateway bind 等）
-- ⚠️ 系统级软件升级
+### Requires Confirmation
+- ⚠️ Uninstall skills
+- ⚠️ Modify core configs (gateway bind, etc.)
+- ⚠️ System-level software upgrades
 
-### 禁止自动
-- ❌ 下载执行外部脚本
-- ❌ 修改防火墙/网络配置
-- ❌ 安装未经验证的补丁
-
----
-
-## 📈 性能影响
-
-| 指标 | 数值 |
-|------|------|
-| 每日扫描时间 | 30-60 秒 |
-| 增量扫描时间 | 5-10 秒 |
-| 内存占用 | < 50MB |
-| 磁盘占用 | ~100MB（含报告） |
-| CPU 占用 | < 5%（扫描时） |
+### Never Auto-Execute
+- ❌ Download/execute external scripts
+- ❌ Modify firewall/network configs
+- ❌ Install unverified patches
 
 ---
 
-## 🐛 故障排查
+## 📈 Performance Impact
 
-### 报告不生成
+| Metric | Value |
+|--------|-------|
+| Daily scan time | 30-60 seconds |
+| Incremental scan | 5-10 seconds |
+| Memory usage | < 50MB |
+| Disk usage | ~100MB (with reports) |
+| CPU usage | < 5% (during scan) |
+
+---
+
+## 🐛 Troubleshooting
+
+### Reports Not Generated
 ```bash
-# 检查 Python 版本
-python3 --version  # 需要 3.10+
+# Check Python version
+python3 --version  # Requires 3.10+
 
-# 手动运行一次
+# Run manually
 python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py
 ```
 
-### 告警不推送
+### Alerts Not Pushed
 ```bash
-# 检查 cron 任务
+# Check cron jobs
 openclaw cron list | grep guardrails
 
-# 查看 cron 执行历史
+# View cron history
 openclaw cron runs --id <job-id>
 ```
 
-### 风险评分异常
+### Abnormal Risk Score
 ```bash
-# 查看详细扣分项
+# View detailed deductions
 cat ~/.openclaw/skills/openclaw-guardrails/reports/risk-score-*.json | jq .breakdown
 ```
 
 ---
 
-## 🤝 贡献指南
+## 🤝 Contributing
 
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 提交 Pull Request
-
----
-
-## 📄 许可证
-
-MIT License - 详见 [LICENSE](LICENSE)
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ---
 
-## 🙏 致谢
+## 📄 License
 
-- [OpenClaw](https://openclaw.ai) - 强大的 AI 代理框架
-- [OSV.dev](https://osv.dev) - Google 维护的开源漏洞库
-- [NVD](https://nvd.nist.gov) - 美国国家漏洞数据库
-- [GitHub Advisories](https://github.com/advisories) - GitHub 安全公告
+MIT License - See [LICENSE](LICENSE)
 
 ---
 
-## 📞 联系方式
+## 🙏 Acknowledgments
+
+- [OpenClaw](https://openclaw.ai) - Powerful AI agent framework
+- [OSV.dev](https://osv.dev) - Google-maintained vulnerability database
+- [NVD](https://nvd.nist.gov) - US National Vulnerability Database
+- [GitHub Advisories](https://github.com/advisories) - GitHub Security Advisories
+
+---
+
+## 📞 Contact
 
 - GitHub Issues: https://github.com/lttcnly/openclaw-guardrails/issues
 - Email: lttcnly@gmail.com
 
 ---
 
-**🛡️ 让 OpenClaw 更安全，从 Guardrails 开始！**
+**🛡️ Make OpenClaw Safer with Guardrails!**
