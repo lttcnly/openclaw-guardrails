@@ -29,11 +29,20 @@ STEPS = [
     [sys.executable, str(ROOT / "scripts" / "vuln_scan.py")],
     [sys.executable, str(ROOT / "scripts" / "risk_score.py")],
     
-    # Threat Intelligence (NEW)
+    # Threat Intelligence
     [sys.executable, str(ROOT / "scripts" / "threat_intel.py")],
     
-    # Configuration Drift Detection (NEW)
+    # Configuration Drift Detection
     [sys.executable, str(ROOT / "scripts" / "config_drift.py")],
+    
+    # Auto-Fix (attempt remediation)
+    [sys.executable, str(ROOT / "scripts" / "auto_fix.py")],
+    
+    # Trend Analysis (weekly, on Sundays)
+    # [sys.executable, str(ROOT / "scripts" / "trend_analysis.py")],
+    
+    # HTML Dashboard (daily, for web viewing)
+    [sys.executable, str(ROOT / "scripts" / "html_dashboard.py")],
 ]
 
 
