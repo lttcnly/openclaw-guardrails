@@ -1,0 +1,52 @@
+# OpenClaw Guardrails Configuration
+# 🛡️ Enterprise-grade security monitoring for OpenClaw
+
+# Scoring Weights
+scoring:
+  audit_weight: 0.5
+  skills_weight: 0.2
+  threat_intel_weight: 0.2
+  drift_weight: 0.1
+
+# 🛡️ Shield Mode: Real-time Interception & Policy Enforcement
+# 护盾模式：实时拦截与策略强制执行
+interceptor:
+  enabled: true             # 开启护盾模式
+  strict_mode: true         # 严格模式：发现未授权变动立即重置
+  
+  # Actions that REQUIRE manual confirmation (Regex supported)
+  # 需要人工确认的敏感操作（支持正则）
+  confirmation_required:
+    - ".*transfer.*"        # 任何包含转账的操作 (Crypto/Bank)
+    - ".*pay.*"             # 支付类操作
+    - ".*wallet.*"          # 钱包/私钥操作
+    - ".*delete.*"          # 删除操作
+    - "system.shutdown"     # 系统关机
+    - "shell.exec"          # 任意 Shell 执行
+  
+  # Actions that are ALWAYS denied
+  # 始终禁止的操作
+  auto_deny:
+    - "rm -rf /"
+    - "sudo rm"
+    - "chmod -R 777"
+
+# Scanning Configuration
+scan:
+  parallel: true
+  max_workers: 4
+  paths:
+    - "~/.openclaw"
+    - "~/.openclaw/skills"
+    - "~/.openclaw/extensions"
+
+# Risk Thresholds
+thresholds:
+  critical: 40
+  high: 60
+  medium: 80
+
+# Notification
+notify:
+  on_critical: true
+  channel: "system_event"

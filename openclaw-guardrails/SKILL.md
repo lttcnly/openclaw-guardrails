@@ -1,7 +1,7 @@
 ---
 name: openclaw-guardrails
-description: Enterprise-grade security monitoring for OpenClaw. Silent monitoring, risk scoring (0-100), auto-fix, threat intelligence, compliance checks. Cross-platform (macOS/Linux/Windows).
-version: 1.0.0
+description: The "Immune System" for OpenClaw. High-performance parallel scanning, risk scoring (0-100), MLPS 2.0 compliance, and self-healing auto-fix.
+version: 1.1.0
 metadata:
   {
     "clawdbot":
@@ -15,63 +15,57 @@ metadata:
 
 # OpenClaw Guardrails 🛡️
 
-**Enterprise-Grade Security Monitoring for OpenClaw**
+**Enterprise-Grade Security Monitoring & Immune System for OpenClaw**
 
-## Quick Install
+## ⚡ Quick Setup (New v1.1 Architecture)
 
-### From ClawHub
+### 1. Install & Secure
+The new architecture uses a sandboxed virtual environment to ensure stability and anti-injection security.
+
 ```bash
-clawhub install openclaw-guardrails
+# Clone and Run Secure Installer
+git clone https://github.com/lttcnly/openclaw-guardrails.git
+cd openclaw-guardrails
+python3 scripts/install.py
 ```
 
-### From GitHub (Recommended)
+### 2. Configure Daily "Immune Scan"
+Update your OpenClaw cron to use the new parallel execution engine:
+
 ```bash
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/lttcnly/openclaw-guardrails/main/install.sh | bash
-
-# Windows (PowerShell)
-Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/lttcnly/openclaw-guardrails/main/install.ps1 | Invoke-Expression
-
-# Manual
-git clone https://github.com/lttcnly/openclaw-guardrails.git ~/.openclaw/skills/openclaw-guardrails
+openclaw cron add --name guardrails:daily \
+  --cron "17 3 * * *" \
+  --session isolated \
+  --light-context \
+  --no-deliver \
+  --message "Daily Guardrails: exec /Users/lttcn/.openclaw/skills/openclaw-guardrails/venv/bin/python3 /Users/lttcn/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py"
 ```
 
-## Features
+---
 
-- 🤫 Silent monitoring (alerts only on critical risks)
-- 🤖 Auto-fix for low-risk issues
-- 📊 Risk scoring (0-100)
-- 🔍 Threat intelligence (OSV + NVD + GitHub)
-- 📋 Compliance checks (MLPS 2.0 / CIS)
-- 🚀 Incremental scanning (performance optimized)
-- 🌐 Cross-platform support
+## 🚀 Key Capabilities
 
-## Usage
+- ⚡ **Parallel Engine**: Blazing fast security audits using multi-process scanning.
+- 🧠 **Dynamic Risk Scoring**: Real-time 0-100 score based on weighted `guardrails.yaml` logic.
+- 📋 **Deep Compliance**: Out-of-the-box checks for **等保 2.0 (MLPS)** and CIS Benchmarks.
+- 🩹 **Self-Healing**: Automatically restores unsafe configurations with timestamped backups.
+- 🔍 **Zero-Trust Audit**: Scans Skill supply-chains and identifies malicious dependencies.
 
-After installation, the daily cron job runs automatically at 03:17.
+---
 
-**Manual scan:**
-```bash
-python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py
-```
+## 📊 Security Dashboard
 
-**View reports:**
-```bash
-cat ~/.openclaw/skills/openclaw-guardrails/reports/summary-*.md
-open ~/.openclaw/skills/openclaw-guardrails/reports/dashboard-*.html
-```
+Guardrails generates a dynamic HTML dashboard at:
+`~/.openclaw/skills/openclaw-guardrails/reports/dashboard.html`
 
-**Pre-install skill scan:**
-```bash
-python3 ~/.openclaw/skills/openclaw-guardrails/scripts/preinstall_scan.py /path/to/skill
-```
+View your **10-day risk trends** and detailed breakdown of security deductions.
 
-## Documentation
+---
 
-- 📖 Full README: https://github.com/lttcnly/openclaw-guardrails
-- 🇨🇳 中文文档：https://github.com/lttcnly/openclaw-guardrails/blob/master/README.zh-CN.md
-- 📦 GitHub: https://github.com/lttcnly/openclaw-guardrails
+## 📖 Documentation
 
-## License
+- **English**: [README.md](https://github.com/lttcnly/openclaw-guardrails/blob/main/README.md)
+- **中文**: [README.zh-CN.md](https://github.com/lttcnly/openclaw-guardrails/blob/main/README.zh-CN.md)
 
-MIT License
+---
+**🛡️ Bulletproof your AI agents with OpenClaw Guardrails.**
