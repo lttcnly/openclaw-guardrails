@@ -1,74 +1,79 @@
-# OpenClaw Guardrails 🛡️
+# 🛡️ OpenClaw Guardrails
 
-### **多智能体操作系统的智能安全堡垒。**
+[![OpenClaw](https://img.shields.io/badge/生态-OpenClaw-blueviolet)](https://github.com/google/gemini-cli)
+[![License](https://img.shields.io/badge/协议-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/版本-1.1.0-blue)](SKILL.md)
 
-[![English](https://img.shields.io/badge/lang-English-blue.svg)](README.md) 
-[![中文](https://img.shields.io/badge/lang-中文-red.svg)](#)
-[![Star on GitHub](https://img.shields.io/github/stars/lttcnly/openclaw-guardrails.svg?style=social)](https://github.com/lttcnly/openclaw-guardrails)
-[![Security: Enterprise](https://img.shields.io/badge/Security-Enterprise_Grade-red.svg)](#)
-
----
-
-**OpenClaw Guardrails** 是专为多智能体（Multi-Agent）时代打造的首个 **“自愈式安全框架”**。它不仅仅是发现问题，更能在漏洞被利用前将其 **自动化修复**，为您的 AI 生态系统构建起一道坚固的免疫防线。
+**OpenClaw 的“免疫系统”。**  
+OpenClaw Guardrails 为你的 AI 代理部署提供无感、企业级的安全监控、风险评分及自愈能力。
 
 ---
 
-## 💎 为什么值得关注 (Star) 这个项目？
+## 🚀 极速上手 (AI 原生指令)
 
-*   🚀 **极致性能**：基于并发扫描引擎，仅需 17 秒即可完成对整个 OS 的深度审计。
-*   🧠 **自愈型 AI**：超越单纯的报告——Guardrails 能 **自动修复** 不安全配置并升级有漏洞的依赖项。
-*   💰 **金融级护盾**：唯一能够实时拦截 AI 触发的 **金融转账** 和 **关键系统指令** 并要求人工确认的框架。
-*   📡 **全球漏洞情报**：深度集成 **CNVD** (权威漏洞库)、**OSV** 和 **NVD** 全球漏洞库。
+如果你正在使用 **OpenClaw**，无需手动克隆或配置。直接对你的 Agent 说：
 
----
+> **“帮我的项目安装好 GitHub 开源项目 `lttcnly/openclaw-guardrails`，并按要求进行配置。”**
 
-## 🔥 核心优势
-
-### 🕵️ **1. “四重情报”漏洞管理**
-我们的引擎使用四个权威情报源对您的系统执行深度扫描：
--   📡 **CNVD 深度集成**：针对 **CNVD 权威漏洞库** 执行专项审计。
--   🌐 **全球情报互联**：实时对照 **Google OSV**、**NIST NVD** 和 **GitHub 安全顾问库**。
--   **动态发现**：递归解析 `package.json` 和 `requirements.txt` 以发现隐藏的“影子依赖”。
-
-### 🩹 **2. “安全触达”自动修复**
-停止手动追踪安全日志。Guardrails 充当您的自动化 SRE：
--   **自动修复 (Auto-Fix)**：瞬间关闭不安全配置，纠正权限过大的策略，并一键升级漏洞包。
--   **快照式备份**：每次修复前都会在 `backups/` 中创建带时间戳的快照，确保随时一键回滚。
-
-### 🛡️ **3. 护盾模式 (实时管控)**
-保护您的资产免受 AI 意外或恶意行为的侵害：
--   **金融拦截**：实时拦截 `transfer` (转账)、`pay` (支付) 及 `wallet` (钱包) 操作并要求人工批准。
--   **系统锁死**：在网关层硬性封禁 `rm -rf /` 或 `chmod 777` 等毁灭性指令。
-
-### 📊 **4. 专业级安全看板**
-可视化您的风险状况，包括量化风险评分及 10 天风险趋势分析。
-
----
-
-## 🏗️ 运行逻辑：安全闭环
-
-```mermaid
-graph TD
-    A[监控引擎] -->|并发扫描| B(漏洞检测)
-    B -->|四重情报比对| C(CNVD / OSV / NVD / GitHub)
-    C -->|计算| D{风险评分}
-    D -->|>80| E[更新仪表盘]
-    D -->|<40| F[关键预警与指令锁死]
-    D -->|可修复| G[自动修复与快照备份]
+或者直接在终端运行一键安装指令：
+```bash
+# 一键安装并建立安全基线
+openclaw skill install https://github.com/lttcnly/openclaw-guardrails --auto-setup
 ```
 
 ---
 
-## 🚀 60 秒快速开始
+## ✨ 为什么选择 Guardrails?
+
+在 AI 驱动的时代，Agent 拥有极高的执行权限。Guardrails 确保它们在安全边界内运行，且不增加任何日常干扰。
+
+*   **⚡ 高性能并行引擎**: 并行执行官方审计、供应链扫描与漏洞分析，速度飞快。
+*   **🧠 动态风险评分**: 实时 0-100 分量化安全态势，根据内置 `guardrails.yaml` 策略精细化计算。
+*   **🩹 配置自愈 (Self-Healing)**: 自动检测并修复不安全的配置（如不当的权限放开），自带时间戳备份。
+*   **🔍 零信任供应链**: 静态分析第三方 Skill 依赖，识别恶意代码、后门及敏感信息泄露。
+*   **📋 合规性对标**: 预置 **等保 2.0 (MLPS)** 及 CIS 基准检查项。
+
+---
+
+## 📊 功能一览
+
+| 维度 | 功能 | 价值 |
+| :--- | :--- | :--- |
+| **身份安全** | 凭据泄露监控 | 防止 API Key、Token 在日志或对话中意外暴露。 |
+| **系统安全** | 配置漂移监控 | 当 Skill 或用户修改了关键系统设置时立即感知。 |
+| **供应链** | 哈希锁定与校验 | 确保你的 Skills 代码未被非法篡改。 |
+| **网络审计** | 端口与代理检查 | 发现非法的外部连接或未经授权的内网穿透。 |
+| **决策分析** | 趋势可视化大屏 | 自动生成包含 10 天风险趋势的交互式 HTML 报告。 |
+
+---
+
+## 🛠️ 进阶使用
+
+### 开启每日“免疫扫描”
+一次配置，终身守护。Guardrails 将在后台静默运行，仅在发现 **CRITICAL (致命)** 风险时才会通过 OpenClaw 主会话推送通知。
 
 ```bash
-# 1. 加固您的安装
-git clone https://github.com/lttcnly/openclaw-guardrails.git
-python3 scripts/install.py
+openclaw cron add --name guardrails:daily \
+  --cron "17 3 * * *" \
+  --session isolated \
+  --message "exec python3 ~/.openclaw/skills/openclaw-guardrails/scripts/run_daily.py"
+```
 
-# 2. 开启护盾与深度扫描
-./venv/bin/python3 scripts/run_daily.py
+### 查看交互式看板
+```bash
+# 在浏览器中打开生成的安全报告
+open .openclaw/skills/openclaw-guardrails/reports/dashboard.html
 ```
 
 ---
-**保护 AI 的未来。与 OpenClaw Guardrails 一起构建。**
+
+## 🤝 参与贡献
+
+我们欢迎安全研究员和 OpenClaw 爱好者！欢迎通过以下方式贡献：
+1.  在 `guardrails.yaml` 中提交新的**安全策略**。
+2.  优化**风险评分**权重算法。
+3.  针对常见漏洞添加**自动修复 (Auto-fix)** 脚本。
+
+---
+
+**🛡️ 让你的 AI 代理无坚不摧。Trust, but verify.**
