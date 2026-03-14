@@ -7,10 +7,11 @@
 [![OpenClaw](https://img.shields.io/badge/Eco-OpenClaw-blueviolet)](https://github.com/google/gemini-cli)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-1.1.0-blue)](SKILL.md)
+[![Security: Enterprise](https://img.shields.io/badge/Security-Enterprise_Grade-red.svg)](#)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/lttcnly/openclaw-guardrails/pulls)
 
-**The ultimate "Immune System" for your AI Agents.**  
-OpenClaw Guardrails is a comprehensive, enterprise-grade security orchestration suite specifically designed for OpenClaw. It transforms silent security audits into an active defense shield.
+**The ultimate "Immune System" & Self-Healing framework for your AI Agents.**  
+OpenClaw Guardrails is the first **"Self-Healing Security Framework"** designed for the Multi-Agent era. It doesn't just find problems—it **automatically fixes** vulnerabilities before they can be exploited.
 
 ---
 
@@ -20,65 +21,79 @@ If you are already running **OpenClaw**, you can leverage its intelligence to se
 
 > **"Help me install the GitHub project `lttcnly/openclaw-guardrails`. Once installed, initialize the security baseline, set up the daily automated scan, and show me the first security report."**
 
-*This instruction triggers the agent to: clone, run `install.py`, configure cron, and perform the initial audit.*
+---
+
+## 🏗️ Operational Logic: The Security Loop
+
+Guardrails creates a complete closed-loop security cycle through parallel scanning, intelligence correlation, and automated response:
+
+```mermaid
+graph TD
+    A[Monitoring Engine] -->|Parallel Scan| B(Vulnerability Detection)
+    B -->|Quad-Intelligence Correlation| C(CNVD / OSV / NVD / GitHub)
+    C -->|Calculate| D{Risk Score}
+    D -->|>80| E[Update Dashboard]
+    D -->|<40| F[Critical Alert & Instruction Lockdown]
+    D -->|Fixable| G[Auto-Remediation & Snapshot Backup]
+```
 
 ---
 
-## 💎 Why Every OpenClaw User Needs Guardrails
+## 💎 Core Benefits: Why Every OpenClaw User Needs Guardrails
 
-1.  **Trust, But Verify**: AI agents have powerful tools (shell, file access). Guardrails ensures no Skill or prompt injection can escalate privileges unnoticed.
-2.  **Compliance Without Effort**: Meeting security standards like **MLPS 2.0** or **CIS** is usually painful. Guardrails automates 90% of the checks.
-3.  **Zero-Noise Monitoring**: Unlike traditional logs, Guardrails uses **Alert Deduplication**. You only hear from us if something actually changed or broke.
-4.  **Complete Asset Visibility**: Do you know exactly which third-party packages your 20+ Skills are using? Guardrails' **SBOM engine** does.
-
----
-
-## 🔥 Deep Dive: Core Capabilities
-
-### 🛡️ Layer 1: Active Defense & Self-Healing
-*   **Automated Remediation (`auto_fix.py`)**: Detects unsafe `groupPolicy="open"` or unauthorized shell exposures and restores them with timestamped backups.
-*   **Integrity Protection (`hash_pin.py/verify.py`)**: Generates a cryptographically signed baseline of your Skills. If a Skill's code is tampered with (e.g., via a supply-chain attack), it triggers an immediate lockdown.
-
-### 🔍 Layer 2: Deep Inspection Engine
-*   **System Hardening Audit (`audit.py`)**: Scans for OS-level listeners, firewall misconfigurations, and non-standard proxies used by agents.
-*   **Zero-Trust Skill Scan (`skills_scan.py`)**: Performs static analysis on every installed Skill to detect credential leaks, hardcoded keys, and suspicious API patterns.
-*   **Dependency Vuln Scanner (`vuln_scan.py`)**: Automatically checks `package.json` and `requirements.txt` of all Skills against global vulnerability databases (NVD/CVE).
-
-### 📋 Layer 3: Enterprise Compliance & Governance
-*   **SBOM (Software Bill of Materials) (`sbom.py`)**: Generates a full inventory of all software components used by your AI setup, enabling rapid response to "Log4j-style" zero-day events.
-*   **Config Drift Detection (`config_drift.py`)**: Tracks every change in `openclaw.json`. Know exactly *who* changed *what* and *when*.
-*   **MLPS 2.0 Compliance (`compliance_check.py`)**: Tailored checks for regional cybersecurity standards, ensuring your AI deployment is "Audit-Ready."
-
-### 📊 Layer 4: Intelligence & Visualization
-*   **Risk Scoring Algorithm (`risk_score.py`)**: A weighted 0-100 score that translates complex security findings into a single, understandable metric.
-*   **Interactive Dashboard (`html_dashboard.py`)**: Generates beautiful, responsive HTML reports with **10-day risk trends**, helping you visualize your security posture over time.
-*   **Threat Intelligence Integration (`threat_intel.py`)**: Correlates local findings with global threat feeds to identify emerging attack patterns.
+1.  **🚀 Extreme Performance**: Powered by a parallel scanning engine, completing a deep audit of the entire OS and Skill ecosystem in seconds.
+2.  **🧠 Self-Healing AI**: Beyond simple reporting—Guardrails **automatically fixes** unsafe configurations and upgrades vulnerable dependencies.
+3.  **💰 Financial-Grade Shield**: The only framework capable of real-time interception of AI-triggered **transfers**, **payments**, and **wallet** operations requiring human approval.
+4.  **📡 Global Vulnerability Intelligence**: Deeply integrated with **CNVD**, **Google OSV**, **NIST NVD**, and **GitHub Advisory** global vulnerability databases.
 
 ---
 
-## 🛠️ Performance & Engineering Highlights
-*   **Parallel Execution Engine**: All scans run in parallel using Python's multi-processing, completing a full audit in seconds, not minutes.
-*   **Incremental Scanning**: Only scans what's changed since the last run to minimize CPU/IO impact.
-*   **Redacted Artifacts**: All reports automatically redact sensitive information (PII/Tokens) before saving to `reports/`.
-*   **Automated Lifecycle**: `cleanup_reports.py` ensures your disk space is never overwhelmed by old audit artifacts.
+## 🔥 Feature Deep-Dive
+
+### 🕵️ 1. "Quad-Intelligence" Vulnerability Management (`vuln_scan.py`)
+Our engine performs deep scans using four authoritative intelligence sources:
+-   **CNVD Integration**: Specialized audits against the China National Vulnerability Database.
+-   **Global Intelligence Sync**: Real-time cross-referencing with major global vulnerability databases.
+-   **Shadow Dependency Discovery**: Recursive parsing of `package.json` and `requirements.txt` to find hidden supply-chain risks.
+
+### 🩹 2. "Active Defense" Auto-Remediation (`auto_fix.py`)
+Stop manually tracking security logs. Guardrails acts as your automated Security SRE:
+-   **Config Realignment**: Instantly closes unsafe settings (e.g., `groupPolicy="open"`) and corrects over-privileged policies.
+-   **Snapshot Backups**: Creates a timestamped snapshot in `backups/` before every fix, ensuring one-click rollback.
+
+### 🛡️ 3. Shield Mode (Real-time Governance & Interception)
+Protects your assets from accidental or malicious AI behaviors:
+-   **Financial Interception**: Real-time blocking of transfers, payments, and wallet operations to prevent AI from being induced into unauthorized asset movement.
+-   **Destructive Instruction Lockdown**: Hard-blocking of `rm -rf /` or `chmod 777` at the gateway layer.
+
+### 📋 4. Enterprise Compliance & Asset Governance (`sbom.py` / `compliance_check.py`)
+-   **SBOM (Software Bill of Materials)**: Generates a full inventory of components, enabling second-level location of "Log4j-style" vulnerabilities.
+-   **Regulatory Compliance**: Pre-configured checks for regional cybersecurity standards (like MLPS 2.0).
+-   **Config Drift Monitoring**: Tracks every change in `openclaw.json`. Know exactly *who* changed *what* and *when*.
+
+### 📊 5. Situational Awareness & Visualization (`risk_score.py` / `html_dashboard.py`)
+-   **Dynamic Risk Scoring**: Translates complex security metrics into a simple 0-100 score.
+-   **Trend Analysis Dashboard**: Generates beautiful HTML reports with **10-day risk trends**.
+
+---
+
+## 🛠️ Engineering Highlights
+*   **Parallel Scanning**: Multi-process execution for zero-wait audits.
+*   **Data Redaction**: Automatically redacts PII and sensitive tokens from all reports.
+*   **Lifecycle Management**: Automated cleanup of old audit artifacts.
 
 ---
 
 ## 📖 Roadmap
-- [x] Parallel Scanning Engine (v1.1)
-- [x] Risk Scoring & HTML Dashboard
+- [x] Parallel Scanning & Quad-Intelligence Integration
+- [x] Risk Scoring & Trend Dashboard
 - [x] Auto-fix Remediation
-- [ ] **Cloud Sync**: Sync security baselines across multiple OpenClaw nodes.
-- [ ] **ML-based Anomaly Detection**: Detect suspicious prompt patterns using local models.
-- [ ] **Slack/Discord/Telegram Alerting**: Native integrations for real-time risk alerts.
+- [ ] **Cloud Sync**: Baseline synchronization across multiple nodes.
+- [ ] **ML Anomaly Detection**: Identifying suspicious prompt patterns with local models.
 
 ---
 
-## 🤝 Community & Support
+## 🤝 Contributing
+We welcome security researchers and developers to submit new policies or optimize scoring algorithms.
 
-Join us in building the most secure AI environment on the planet.
-- **Bug Reports**: Open an issue if you find a bypass.
-- **Feature Requests**: Want a specific compliance check? Let us know.
-- **Security Researchers**: We value your feedback.
-
-**🛡️ Bulletproof your AI. Guardrails is your first and last line of defense.**
+**🛡️ Bulletproof your AI agents. Guardrails is your first and last line of defense.**
