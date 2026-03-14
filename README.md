@@ -1,5 +1,9 @@
 # 🛡️ OpenClaw Guardrails
 
+<p align="center">
+  <a href="README.md">English</a> | <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 [![OpenClaw](https://img.shields.io/badge/Eco-OpenClaw-blueviolet)](https://github.com/google/gemini-cli)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-1.1.0-blue)](SKILL.md)
