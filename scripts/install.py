@@ -1,104 +1,53 @@
 #!/usr/bin/env python3
-"""Installer / bootstrap for openclaw-guardrails.
-
-Goals:
-- cross-platform
-- safe by default (plan-only)
-- optionally schedule periodic audits via `openclaw cron`
-
-This script does NOT download anything. It assumes you're already inside the repo.
+"""Secure Installation for OpenClaw Guardrails.
+- Creates virtual environment (venv)
+- Installs dependencies safely
+- Configures initial baseline
 """
 
-from __future__ import annotations
-
-import argparse
 import os
-import platform
-import shutil
-import subprocess
 import sys
+import subprocess
+import venv
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+VENV_DIR = ROOT / "venv"
+REQUIREMENTS = ROOT / "requirements.txt"
 
+def create_venv():
+    if not VENV_DIR.exists():
+        print(f"创建虚拟环境: {VENV_DIR}...")
+        venv.create(VENV_DIR, with_pip=True)
+    else:
+        print("虚拟环境已存在。")
 
-def have(cmd: str) -> bool:
-    return shutil.which(cmd) is not None
+def install_deps():
+    pip_exe = VENV_DIR / "bin" / "pip" if os.name != "nt" else VENV_DIR / "Scripts" / "pip.exe"
+    if not REQUIREMENTS.exists():
+        # Create default requirements if missing
+        REQUIREMENTS.write_text("pyyaml\nrequests\n", encoding="utf-8")
+    
+    print("安装依赖项...")
+    subprocess.run([str(pip_exe), "install", "-r", str(REQUIREMENTS)], check=True)
 
+def setup_baseline():
+    print("初始化安全基线...")
+    # Trigger a baseline pin
+    python_exe = VENV_DIR / "bin" / "python" if os.name != "nt" else VENV_DIR / "Scripts" / "python.exe"
+    subprocess.run([str(python_exe), str(ROOT / "scripts" / "hash_pin.py")])
 
-def run(cmd: list[str]) -> int:
-    p = subprocess.run(cmd)
-    return p.returncode
-
-
-def cron_cmds(repo_root: Path) -> list[list[str]]:
-    """Cron plan.
-
-    We schedule ONE daily job to reduce complexity and make it portable.
-
-    Note: OpenClaw cron executes an *agent turn*. We therefore instruct the agent
-    to run a local, read-only command via exec.
-    """
-    run_daily = str(repo_root / "scripts" / "run_daily.py")
-    msg = (
-        "Run daily guardrails read-only checks. "
-        "Use exec to run: "
-        f"{sys.executable} {run_daily}"
-    )
-
-    return [
-        [
-            "openclaw", "cron", "add",
-            "--name", "guardrails:daily",
-            "--cron", "17 3 * * *",
-            "--session", "isolated",
-            "--light-context",
-            "--no-deliver",
-            "--timeout-seconds", "900",
-            "--message", msg,
-        ]
-    ]
-
-
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--plan", action="store_true", help="Print the cron plan (default)")
-    ap.add_argument("--apply", action="store_true", help="Apply cron jobs (state-changing)")
-    args = ap.parse_args()
-
-    if not have("python3") and not have("python"):
-        print("Python not found")
-        return 1
-
-    if not have("openclaw"):
-        print("openclaw CLI not found on PATH")
-        return 1
-
-    # Always run local scripts once (read-only)
-    print("[guardrails] running one-time read-only checks...")
-    run([sys.executable, str(ROOT / "scripts" / "run_daily.py")])
-
-    cmds = cron_cmds(ROOT)
-
-    print("\n[guardrails] cron plan (optional):")
-    for c in cmds:
-        print("  ", " ".join(c))
-
-    if not args.apply:
-        print("\n(no changes applied; re-run with --apply to create cron jobs)")
-        return 0
-
-    # Apply (explicit)
-    print("\n[guardrails] APPLY MODE: creating cron jobs")
-    for c in cmds:
-        rc = run(c)
-        if rc != 0:
-            print("failed:", " ".join(c))
-            return rc
-
-    print("done")
-    return 0
-
+def main():
+    try:
+        create_venv()
+        install_deps()
+        setup_baseline()
+        print("\n✅ OpenClaw Guardrails 安装成功！")
+        print(f"请使用以下命令启动每日扫描：")
+        print(f"source {VENV_DIR}/bin/activate && python3 {ROOT}/scripts/run_daily.py")
+    except Exception as e:
+        print(f"❌ 安装失败: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

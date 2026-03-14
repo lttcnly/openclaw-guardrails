@@ -1,170 +1,120 @@
 #!/usr/bin/env python3
-"""Calculate risk score (0-100) and generate summary.
-
-Outputs:
-- reports/risk-score-<ts>.json
-- reports/summary-<ts>.md (human readable)
+"""Calculate risk score (0-100) using meta.json and guardrails.yaml.
 """
 
 from __future__ import annotations
 
 import json
 import time
+import logging
 from pathlib import Path
 from typing import Dict, Any, List
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORTS = ROOT / "reports"
-REPORTS.mkdir(parents=True, exist_ok=True)
+LOGS = ROOT / "logs"
+CONFIG_FILE = ROOT / "guardrails.yaml"
+META_FILE = REPORTS / "meta.json"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[logging.FileHandler(LOGS / "guardrails.log"), logging.StreamHandler()]
+)
+logger = logging.getLogger("risk_score")
 
 TS = time.strftime("%Y%m%d-%H%M%S")
 SCORE_OUT = REPORTS / f"risk-score-{TS}.json"
 SUMMARY_OUT = REPORTS / f"summary-{TS}.md"
 
-
-def load_latest(pattern: str) -> Dict[str, Any] | None:
-    files = sorted(REPORTS.glob(pattern))
-    if not files:
-        return None
+def load_config() -> Dict:
     try:
-        return json.loads(files[-1].read_text(encoding="utf-8"))
-    except Exception:
-        return None
-
-
-def calc_score(audit: Dict | None, skills: Dict | None, vuln: Dict | None) -> Dict[str, Any]:
-    # Base score: 100 (safe)
-    # Deductions:
-    # - critical: -20 each (max -60)
-    # - warn: -5 each (max -20)
-    # - skills HIGH: -10 each (max -20)
-    # - vuln high/critical: -10 each (max -20)
-
-    score = 100
-    breakdown = []
-
-    # Official audit
-    if audit:
-        summary = audit.get("summary", {})
-        crit = int(summary.get("critical", 0))
-        warn = int(summary.get("warn", 0))
-        crit_ded = min(crit * 20, 60)
-        warn_ded = min(warn * 5, 20)
-        score -= crit_ded + warn_ded
-        breakdown.append({
-            "category": "OpenClaw Security Audit",
-            "critical": crit,
-            "warn": warn,
-            "deduction": crit_ded + warn_ded,
-        })
-
-    # Skills scan
-    if skills:
-        high = len([f for f in skills.get("flagged", []) if f.get("severity") == "HIGH"])
-        high_ded = min(high * 10, 20)
-        score -= high_ded
-        breakdown.append({
-            "category": "Skills Supply-Chain",
-            "high_flags": high,
-            "deduction": high_ded,
-        })
-
-    # Vuln scan
-    if vuln:
-        results = vuln.get("results", [])
-        high_crit = 0
-        for r in results:
-            if r.get("type") == "npm":
-                meta = json.loads(r.get("stdout", "{}")).get("metadata", {}).get("vulnerabilities", {})
-                high_crit += int(meta.get("high", 0) + meta.get("critical", 0))
-        vuln_ded = min(high_crit * 10, 20)
-        score -= vuln_ded
-        breakdown.append({
-            "category": "Dependency Vulnerabilities",
-            "high_critical": high_crit,
-            "deduction": vuln_ded,
-        })
-
-    score = max(score, 0)
-
-    # Risk level
-    if score >= 80:
-        level = "LOW"
-        color = "🟢"
-    elif score >= 60:
-        level = "MEDIUM"
-        color = "🟡"
-    elif score >= 40:
-        level = "HIGH"
-        color = "🟠"
-    else:
-        level = "CRITICAL"
-        color = "🔴"
-
+        import yaml
+        if CONFIG_FILE.exists():
+            return yaml.safe_load(CONFIG_FILE.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.warning(f"Could not load yaml config, using defaults: {e}")
+    
     return {
-        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "score": score,
-        "level": level,
-        "color": color,
-        "breakdown": breakdown,
+        "scoring": {"audit_weight": 0.5, "skills_weight": 0.2, "threat_intel_weight": 0.2, "drift_weight": 0.1},
+        "thresholds": {"critical": 40, "high": 60, "medium": 80}
     }
 
+def load_latest_report(report_type: str) -> Dict | None:
+    if not META_FILE.exists(): return None
+    try:
+        meta = json.loads(META_FILE.read_text(encoding="utf-8"))
+        report_path = meta.get(report_type, {}).get("latest")
+        if report_path and Path(report_path).exists():
+            return json.loads(Path(report_path).read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.error(f"Failed to load latest {report_type} report: {e}")
+    return None
 
-def gen_summary(score_data: Dict, audit: Dict | None, skills: Dict | None) -> str:
-    lines = []
-    lines.append(f"# Guardrails Risk Summary")
-    lines.append(f"**Time**: {score_data['time']}")
-    lines.append(f"**Score**: {score_data['color']} {score_data['score']}/100 ({score_data['level']})")
-    lines.append("")
+def calc_score(config: Dict) -> Dict[str, Any]:
+    score = 100.0
+    weights = config.get("scoring", {})
+    breakdown = []
 
-    lines.append("## Breakdown")
-    for b in score_data.get("breakdown", []):
-        lines.append(f"- **{b['category']}**: deduction {b['deduction']} pts")
-        for k, v in b.items():
-            if k not in ("category", "deduction"):
-                lines.append(f"  - {k}: {v}")
-    lines.append("")
-
-    # Top critical findings
+    # 1. Audit
+    audit = load_latest_report("security_audit") # OpenClaw native audit
     if audit:
-        crit = [f for f in audit.get("findings", []) if f.get("severity") == "critical"]
-        if crit:
-            lines.append("## Critical Findings")
-            for f in crit[:5]:
-                lines.append(f"- {f.get('title')} (`{f.get('checkId')}`)")
-            lines.append("")
+        crit = int(audit.get("summary", {}).get("critical", 0))
+        warn = int(audit.get("summary", {}).get("warn", 0))
+        deduction = (crit * 20 + warn * 5) * weights.get("audit_weight", 0.5)
+        score -= deduction
+        breakdown.append({"category": "Security Audit", "deduction": round(deduction, 1)})
 
-    # Skills HIGH flags
+    # 2. Threat Intel
+    intel = load_latest_report("threat_intel")
+    if intel:
+        summary = intel.get("summary", {})
+        crit = summary.get("critical", 0)
+        high = summary.get("high", 0)
+        deduction = (crit * 15 + high * 8) * weights.get("threat_intel_weight", 0.2)
+        score -= deduction
+        breakdown.append({"category": "Threat Intel", "deduction": round(deduction, 1)})
+
+    # 3. Skills Scan
+    skills = load_latest_report("skills_scan")
     if skills:
-        high = [f for f in skills.get("flagged", []) if f.get("severity") == "HIGH"]
-        if high:
-            lines.append("## HIGH Risk Skills")
-            for f in high[:5]:
-                lines.append(f"- `{f.get('skill')}`: {f.get('path')}")
-            lines.append("")
+        flagged = len(skills.get("flagged", []))
+        deduction = (flagged * 10) * weights.get("skills_weight", 0.2)
+        score -= deduction
+        breakdown.append({"category": "Skills Supply-Chain", "deduction": round(deduction, 1)})
 
-    lines.append("---")
-    lines.append("*Generated by openclaw-guardrails*")
+    score = max(0.0, min(100.0, score))
+    
+    # Determine Level
+    thresh = config.get("thresholds", {})
+    if score < thresh.get("critical", 40): level, color = "CRITICAL", "🔴"
+    elif score < thresh.get("high", 60): level, color = "HIGH", "🟠"
+    elif score < thresh.get("medium", 80): level, color = "MEDIUM", "🟡"
+    else: level, color = "LOW", "🟢"
 
-    return "\n".join(lines)
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "score": round(score, 1),
+        "level": level,
+        "color": color,
+        "breakdown": breakdown
+    }
 
-
+from datetime import datetime
 def main() -> int:
-    audit = load_latest("openclaw-security-audit-*.json")
-    skills = load_latest("skills-scan-*.json")
-    vuln = load_latest("vuln-scan-*.json")
-
-    score_data = calc_score(audit, skills, vuln)
-    SCORE_OUT.write_text(json.dumps(score_data, ensure_ascii=False, indent=2), encoding="utf-8")
-
-    summary = gen_summary(score_data, audit, skills)
-    SUMMARY_OUT.write_text(summary, encoding="utf-8")
-
-    print(f"Saved: {SCORE_OUT}")
-    print(f"Saved: {SUMMARY_OUT}")
-    print(f"Risk Score: {score_data['color']} {score_data['score']}/100 ({score_data['level']})")
+    config = load_config()
+    score_data = calc_score(config)
+    
+    SCORE_OUT.write_text(json.dumps(score_data, indent=2, ensure_ascii=False), encoding="utf-8")
+    
+    # Update meta.json
+    meta = {}
+    if META_FILE.exists(): meta = json.loads(META_FILE.read_text())
+    meta["risk_score"] = {"latest": str(SCORE_OUT), "timestamp": score_data["timestamp"], "status": "success"}
+    META_FILE.write_text(json.dumps(meta, indent=2))
+    
+    logger.info(f"Risk Score: {score_data['score']} ({score_data['level']})")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
