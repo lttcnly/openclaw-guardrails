@@ -13,7 +13,7 @@
 
 ---
 
-**OpenClaw Guardrails** is a **full-stack security protection and self-healing framework** designed for AI Agents. Acting as the "Immune System" for the OpenClaw ecosystem, it ensures your AI assistants operate within safe boundaries through real-time semantic interception, configuration enforcement, and deep supply-chain scanning.
+**OpenClaw Guardrails** is a **full-stack security protection and self-healing framework** designed for AI Agents. Acting as the "Immune System" for the OpenClaw ecosystem, it ensures your AI assistants operate within safe boundaries.
 
 ---
 
@@ -27,7 +27,7 @@ If you are using **OpenClaw**, leverage its intelligence to deploy a full enterp
 
 ## 🏗️ System Architecture: Three-Pillar Defense (Vertical Flow)
 
-本项目采用垂直分层架构，从入口到持久化层提供全方位保护：
+Guardrails builds a closed-loop of **Monitor -> Decide -> Heal**:
 
 ```mermaid
 graph TD
@@ -62,19 +62,32 @@ graph TD
 ## 🔥 Enterprise Features
 
 ### 💎 1. Financial-Grade Shield
-The only framework capable of understanding Agent intent at a semantic level:
--   **Semantic Recognition**: Identifies hidden intents like `transfer`, `pay`, or `withdraw` in natural language.
--   **Circuit Breaker**: Instantly cuts tool execution flows when risk is detected and requests admin approval.
+The only framework capable of understanding Agent intent at a semantic level: identifies intents like `transfer`, `pay`, or `withdraw` in natural language and blocks unauthorized flows.
 
 ### 🩹 2. Golden Baseline Enforcement
-Eliminates security gaps caused by "permission drift":
--   **Strict Guarding**: Enforces core settings like `authMode: token` and `systemRunApproval: always`.
--   **Instant Reversion**: Auto-restores configurations within milliseconds of detecting a violation.
+Eliminates security gaps caused by "permission drift": enforces core settings like `authMode: token` and `systemRunApproval: always` with instant reversion on violations.
 
 ### 🕵️ 3. PII & Credential Sanitizer
-Ensures your API Keys don't become "public secrets":
--   **Full-Spectrum Probe**: Scans `.env`, `.log`, and `.json` for keys, emails, IPs, and tokens.
--   **Auto-Redaction**: Reports automatically replace sensitive data with `[REDACTED]` tokens.
+Ensures your API Keys don't become "public secrets": scans `.env`, `.log`, and `.json` for keys, emails, IPs, and tokens with automatic redaction.
+
+---
+
+## 📖 Advanced Configuration: `guardrails.yaml`
+
+Customize your defense policies with ease:
+```yaml
+policies:
+  financial_protection:
+    enabled: true
+    threshold: 0.8  # Confidence for risk intent
+  config_baseline:
+    strict_mode: true
+    protected_keys: ["authMode", "groupPolicy", "systemRunApproval"]
+  sanitization:
+    auto_redact: true # Automatically redact PII in reports
+  retention:
+    reports_days: 30 # Auto-cleanup artifacts older than 30 days
+```
 
 ---
 
@@ -84,19 +97,6 @@ Guardrails helps organizations meet global cybersecurity standards:
 -   ✅ **MLPS 2.0 (China)**: Identity, Access Control, Security Audit, Data Integrity.
 -   ✅ **CIS Benchmarks**: OS and service hardening checks.
 -   ✅ **GDPR**: Automatic privacy data identification and redaction.
-
----
-
-## 💡 Call for Contributions & Better Algorithms (Join Us!)
-
-**We believe that security is an endless game of wits.**
-
-We warmly welcome security experts, algorithm engineers, and community developers to provide better ways to harden this "Immune System". We are particularly focused on:
-1.  **More Accurate Intent Recognition Algorithms**: How to more effectively identify complex prompt injections or bypass attacks?
-2.  **More Efficient Self-Healing Mechanisms**: For large-scale distributed nodes, how to elegantly synchronize security policies?
-3.  **Zero-Trust Audit Models**: For dynamically loaded third-party tools, are there deeper sandbox audit solutions?
-
-If you have any ideas, feel free to submit an **Issue** or open a **Pull Request**! Every algorithm optimization you contribute will make the AI world safer.
 
 ---
 
@@ -110,11 +110,9 @@ If you have any ideas, feel free to submit an **Issue** or open a **Pull Request
 
 ---
 
-## 🤝 Community & Roadmap
-- [x] v1.1 Parallel Engine & Configuration Enforcement
-- [x] Financial-grade Semantic Interception & PII Redaction
-- [ ] **Federated Protection**: Federated security audits across multiple OpenClaw nodes.
-- [ ] **Behavioral Profiling**: ML-based recognition of anomalous operation sequences.
+## 🤝 Community & Roadmap (Join Us!)
+
+We warmly welcome security experts and developers to contribute better algorithms for intent recognition, self-healing, or zero-trust auditing. If you have any suggestions or better implementations, feel free to open an **Issue** or submit a **Pull Request**. Let's build a safer AI future together!
 
 ---
 
