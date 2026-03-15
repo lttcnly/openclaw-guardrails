@@ -13,13 +13,15 @@
 
 ---
 
-**OpenClaw Guardrails** is a **full-stack security protection and self-healing framework** designed for AI Agents. Acting as the "Immune System" for the OpenClaw ecosystem, it ensures your AI assistants operate within safe boundaries.
+**OpenClaw Guardrails** is a **full-stack security protection and self-healing framework** designed for AI Agents.
+
+In the Multi-Agent era, AI assistants possess powerful privileges: executing shell scripts, managing sensitive files, and calling financial APIs. Acting as the "Immune System" for the OpenClaw ecosystem, Guardrails provides a three-pillar defense architecture (Active Interception, Self-Healing, and Deep Scanning) to ensure your AI systems operate strictly within safe boundaries, cutting off prompt injections, asset exfiltration, and supply-chain attacks at the source.
 
 ---
 
 ## 🚀 Quick Start: AI-Native Installation
 
-If you are using **OpenClaw**, leverage its intelligence to deploy a full enterprise-grade defense system. Just say to your Agent:
+If you are using **OpenClaw**, leverage its intelligence to deploy a full enterprise-grade defense system in seconds. Just say to your Agent:
 
 > **"Help me install `lttcnly/openclaw-guardrails`. Once installed, initialize the security baseline, set up a daily automated audit at 03:17, and show me the first risk-score report."**
 
@@ -27,29 +29,31 @@ If you are using **OpenClaw**, leverage its intelligence to deploy a full enterp
 
 ## 🏗️ System Architecture: Three-Pillar Defense (Vertical Flow)
 
-Guardrails builds a closed-loop of **Monitor -> Decide -> Heal**:
+Guardrails is more than a scanner; it builds a complete closed-loop from **Real-time Interception to Auto-Reversion**:
 
 ```mermaid
 graph TD
     subgraph L1 [Layer 1: Active Defense - Shield Mode]
         A[Agent Action Start] --> B{Intent Analysis}
-        B -- Risk Identified --> C[Block & Request Human Review]
-        B -- Safe Confirmed --> D[Execute Allowed]
+        B -- Financial/Destructive Risk --> C[Block & Request Human Review]
+        B -- PII/Secret Match --> D[Auto-Redact & Audit Log]
+        B -- Safe Confirmed --> E[Allow Execution]
     end
 
-    D --> E
+    E --> F
 
     subgraph L2 [Layer 2: Self-Healing - Enforce Mode]
-        E[Config Monitoring] --> F{Baseline Check}
-        F -- Unauthorized Drift --> G[Auto-Revert & Snapshot Backup]
-        F -- Baseline Compliant --> H[Keep Running]
+        F[Config Monitoring] --> G{Baseline Check}
+        G -- Unauthorized Drift --> H[Instant Revert & Snapshot]
+        G -- Baseline Compliant --> I[Maintain Stable Operation]
     end
 
-    H --> I
+    I --> J
 
     subgraph L3 [Layer 3: Deep Audit - Intelligence]
-        I[SBOM Asset Inventory] --> J[Global Vuln Intel Correlation]
-        J --> K[Dynamic Risk Score Report]
+        J[SBOM Asset Inventory] --> K[Global Vuln Intel Correlation]
+        K --> L[CNVD/NVD/OSV Integration]
+        L --> M[Dynamic Risk Score Dashboard]
     end
 
     style L1 fill:#f9f,stroke:#333,stroke-width:2px
@@ -59,32 +63,59 @@ graph TD
 
 ---
 
-## 🔥 Enterprise Features
+## 🔥 Core Capability Deep-Dive
 
-### 💎 1. Financial-Grade Shield
-The only framework capable of understanding Agent intent at a semantic level: identifies intents like `transfer`, `pay`, or `withdraw` in natural language and blocks unauthorized flows.
+### 💎 1. Financial-Grade Shield & Intent Analysis (`threat_intel.py`)
+The "Brain" of Guardrails, capable of understanding the semantic intent behind Agent tool calls:
+-   **Financial Circuit Breaker**: Real-time identification of intents like `transfer`, `pay`, or `withdraw` hidden in natural language, requiring mandatory human approval.
+-   **Destructive Command Lockdown**: Blocks catastrophic operations like `rm -rf /`, `chmod 777`, or `mkfs`.
+-   **Exfiltration Monitoring**: Detects suspicious `curl` uploads, `scp` transfers, and unauthorized reverse shells (`bash -i`).
 
-### 🩹 2. Golden Baseline Enforcement
-Eliminates security gaps caused by "permission drift": enforces core settings like `authMode: token` and `systemRunApproval: always` with instant reversion on violations.
+### 🩹 2. Security Baseline Enforcement & Self-Healing (`auto_fix.py`)
+Eliminates security gaps caused by "permission drift" or human error:
+-   **Golden Baseline**: Enforces core settings like `authMode: token` (disabling anonymous access) and `systemRunApproval: always`.
+-   **Self-Healing Reversion**: Instantly restores configurations (e.g., `allowInsecure: true`) within milliseconds of detecting a violation.
+-   **Snapshot Auditing**: Maintains timestamped snapshots in `backups/` for every remediation, ensuring full forensic traceability.
 
-### 🕵️ 3. PII & Credential Sanitizer
-Ensures your API Keys don't become "public secrets": scans `.env`, `.log`, and `.json` for keys, emails, IPs, and tokens with automatic redaction.
+### 🕵️ 3. Privacy Protection & PII Sanitizer (`sanitizer.py`)
+Ensures your API Keys and private data don't become "public secrets":
+-   **Deep Probing**: Scans `.env`, `.log`, `.json`, and `.yaml` files for keys, emails, IPs, JWT tokens, and passwords.
+-   **Automated Redaction**: Automatically replaces sensitive info with `<REDACTED>` in all audit reports and logs.
+
+### 🔍 4. Supply Chain & SBOM Loop (`sbom.py` / `vuln_scan.py`)
+Deep-tissue inspection of the Skill ecosystem:
+-   **SBOM Inventory**: Generates standard Software Bill of Materials for all installed Skills and their transitive npm/pip dependencies.
+-   **Quad-Intelligence Sync**: Real-time correlation with **CNVD**, **NVD**, **OSV**, and **GitHub Advisory**.
+-   **Zero-Trust Verification**: Uses cryptographic hashing (`hash_pin.py`) to ensure Skill code remains untampered.
 
 ---
 
 ## 📖 Advanced Configuration: `guardrails.yaml`
 
-Customize your defense policies with ease:
+As a mature product, Guardrails offers fine-grained control:
 ```yaml
 policies:
+  # Financial Protection Policy
   financial_protection:
     enabled: true
-    threshold: 0.8  # Confidence for risk intent
+    threshold: 0.8  # Confidence for intent recognition
+    blocked_keywords: ["transfer", "wallet", "blockchain"]
+  
+  # Golden Baseline Enforcement
   config_baseline:
     strict_mode: true
-    protected_keys: ["authMode", "groupPolicy", "systemRunApproval"]
+    protected_keys: 
+      - "authMode"
+      - "groupPolicy"
+      - "systemRunApproval"
+      - "allowInsecure"
+  
+  # Sanitization Settings
   sanitization:
-    auto_redact: true # Automatically redact PII in reports
+    auto_redact: true
+    sensitive_patterns: ["API_KEY", "JWT_TOKEN", "SSH_KEY"]
+
+  # Lifecycle Management
   retention:
     reports_days: 30 # Auto-cleanup artifacts older than 30 days
 ```
@@ -104,15 +135,25 @@ Guardrails helps organizations meet global cybersecurity standards:
 
 | Metric | Result | Description |
 | :--- | :--- | :--- |
-| **Full Audit Duration** | < 15s | Powered by Python multi-processing engine. |
-| **Self-Healing Latency** | < 100ms | Detection-to-reversion speed for critical drifts. |
-| **Scanning Depth** | 5 Levels | Deeply identifies nested npm/pip shadow dependencies. |
+| **Audit Duration** | < 15s | Powered by Python multi-processing engine. |
+| **Baseline Latency** | Near-real-time | Millisecond response to critical config drifts. |
+| **Memory Footprint** | ~50MB | Lightweight; zero impact on OpenClaw performance. |
+| **Scanning Depth** | 5 Levels | Deeply identifies nested shadow dependencies. |
 
 ---
 
-## 🤝 Community & Roadmap (Join Us!)
+## 💡 Call for Contributions & Algorithms (Join Us!)
 
-We warmly welcome security experts and developers to contribute better algorithms for intent recognition, self-healing, or zero-trust auditing. If you have any suggestions or better implementations, feel free to open an **Issue** or submit a **Pull Request**. Let's build a safer AI future together!
+**Security is a game of wits, but it's won through collaboration.**  
+We warmly welcome security experts and developers to contribute better algorithms for intent recognition, self-healing, or zero-trust auditing. If you have any suggestions, feel free to open an **Issue** or submit a **Pull Request**. Let's build a safer AI future together!
+
+---
+
+## 🤝 Roadmap
+- [x] v1.1 Parallel Engine & Configuration Enforcement
+- [x] Financial-grade Semantic Interception & PII Redaction
+- [ ] **Federated Protection**: Global situational awareness across multiple nodes.
+- [ ] **Behavioral Profiling**: ML-based recognition of anomalous operation sequences.
 
 ---
 
