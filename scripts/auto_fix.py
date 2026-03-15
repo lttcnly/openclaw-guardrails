@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Auto-Remediation: Automatically fix low-risk security issues.
 
-Auto-fix categories (no confirmation required):
-- Dependency upgrades (npm update, pip install --upgrade)
-- Config restoration to secure baseline (groupPolicy, etc.)
+Auto-fix categories:
+- Configuration baseline enforcement (authMode, systemRunApproval, etc.)
+- Restoration of unsafe groupPolicy settings
+- Backup before any modification
 
 Outputs:
 - reports/auto-fix-<ts>.json
-- backups/ (before any modification)
-- updates reports/meta.json
+- backups/ (timestamped snapshots)
 """
 
 from __future__ import annotations
@@ -43,9 +43,13 @@ TS = time.strftime("%Y%m%d-%H%M%S")
 OUT_JSON = REPORTS / f"auto-fix-{TS}.json"
 META_FILE = REPORTS / "meta.json"
 
-AUTO_FIX_CONFIG = {
-    "groupPolicy": {"unsafe": "open", "safe": "allowlist"},
-    "tools.fs.workspaceOnly": {"unsafe": False, "safe": True},
+# --- Security Baseline Definition ---
+# These paths correspond to nested keys in openclaw.json
+SECURITY_BASELINE = {
+    "authMode": "token",
+    "systemRunApproval": "always",
+    "allowInsecure": False,
+    "groupPolicy": "allowlist"  # Default fallback
 }
 
 def update_meta(report_type: str, file_path: Path):
@@ -70,7 +74,6 @@ def backup_file(path: Path) -> Path | None:
         return None
 
 def run_safe_cmd(cmd: List[str], cwd: str | None = None) -> subprocess.CompletedProcess | None:
-    """Run subprocess safely using list arguments."""
     try:
         logger.info(f"Executing: {' '.join(cmd)}")
         return subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=cwd)
@@ -78,59 +81,113 @@ def run_safe_cmd(cmd: List[str], cwd: str | None = None) -> subprocess.Completed
         logger.error(f"Execution failed: {e}")
         return None
 
-def fix_config(execute: bool = False) -> List[Dict]:
+def get_nested(data, path_str, default=None):
+    """Safely get a nested value using dot notation."""
+    keys = path_str.split('.')
+    for key in keys:
+        if isinstance(data, dict):
+            data = data.get(key, default)
+        else:
+            return default
+    return data
+
+def set_nested(data, path_str, value):
+    """Safely set a nested value using dot notation."""
+    keys = path_str.split('.')
+    for key in keys[:-1]:
+        data = data.setdefault(key, {})
+    data[keys[-1]] = value
+
+def enforce_baseline(content: Dict, execute: bool = False) -> List[Dict]:
+    """Check and fix openclaw.json against the security baseline."""
     results = []
-    # Try to locate openclaw.json
+    modified = False
+
+    # Check top-level security fields
+    for key, expected in SECURITY_BASELINE.items():
+        actual = content.get(key)
+        if actual != expected:
+            results.append({
+                "path": key,
+                "expected": str(expected),
+                "actual": str(actual),
+                "severity": "CRITICAL",
+                "action": f"Revert to {expected}",
+                "status": "pending"
+            })
+            if execute:
+                content[key] = expected
+                modified = True
+                results[-1]["status"] = "fixed"
+
+    # Check all channels for groupPolicy="open"
+    channels = content.get("channels", {})
+    for channel_name, channel_cfg in channels.items():
+        if isinstance(channel_cfg, dict) and channel_cfg.get("groupPolicy") == "open":
+            path = f"channels.{channel_name}.groupPolicy"
+            results.append({
+                "path": path,
+                "expected": "allowlist",
+                "actual": "open",
+                "severity": "HIGH",
+                "action": "Set to allowlist",
+                "status": "pending"
+            })
+            if execute:
+                channel_cfg["groupPolicy"] = "allowlist"
+                modified = True
+                results[-1]["status"] = "fixed"
+
+    return results, modified
+
+def fix_config(execute: bool = False) -> List[Dict]:
+    all_results = []
     config_path = Path.home() / ".openclaw" / "openclaw.json"
-    if not config_path.exists(): return results
+    if not config_path.exists():
+        logger.warning(f"Config not found at {config_path}")
+        return all_results
     
     try:
         content = json.loads(config_path.read_text(encoding="utf-8"))
-        modified = False
-        
-        # Simple depth-1 traversal for config (extend if needed)
-        # This is a simplified example; actual config paths are deep
-        # For now, we use the 'openclaw config set' CLI as it handles deep keys better
-        
-        # Example: Check discord groupPolicy
-        # In openclaw.json: channels.discord.groupPolicy
-        discord_policy = content.get("channels", {}).get("discord", {}).get("groupPolicy")
-        if discord_policy == "open":
-            cmd = ["openclaw", "config", "set", "channels.discord.groupPolicy=allowlist"]
-            if execute:
-                backup_file(config_path)
-                res = run_safe_cmd(cmd)
-                status = "executed" if res and res.returncode == 0 else "failed"
-            else:
-                status = "simulated"
-            results.append({"path": "channels.discord.groupPolicy", "action": "set allowlist", "status": status})
+        baseline_results, modified = enforce_baseline(content, execute)
+        all_results.extend(baseline_results)
+
+        if modified and execute:
+            backup_file(config_path)
+            config_path.write_text(json.dumps(content, indent=2), encoding="utf-8")
+            logger.info(f"Security baseline enforced and saved to {config_path}")
 
     except Exception as e:
-        logger.error(f"Config fix logic failed: {e}")
+        logger.error(f"Config remediation failed: {e}")
     
-    return results
+    return all_results
 
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--execute", action="store_true")
+    ap.add_argument("--execute", action="store_true", help="Apply fixes instead of just dry-run")
     args = ap.parse_args()
 
-    logger.info(f"Starting auto-fix (execute={args.execute})")
+    logger.info(f"Starting auto-remediation (execute={args.execute})")
     
-    config_results = fix_config(execute=args.execute)
+    results = fix_config(execute=args.execute)
     
     report = {
-        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "execute_mode": args.execute,
-        "results": config_results
+        "summary": {
+            "total_issues": len(results),
+            "fixed": sum(1 for r in results if r["status"] == "fixed"),
+            "pending": sum(1 for r in results if r["status"] == "pending")
+        },
+        "details": results
     }
     
     OUT_JSON.write_text(json.dumps(report, indent=2), encoding="utf-8")
     update_meta("auto_fix", OUT_JSON)
     
-    logger.info("Auto-fix process completed.")
+    logger.info(f"Auto-fix process completed. Found {len(results)} issues.")
     return 0
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
