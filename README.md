@@ -43,53 +43,42 @@ graph TD
 
 1.  **🚀 Extreme Performance**: Powered by a parallel scanning engine, completing a deep audit of the entire OS and Skill ecosystem in seconds.
 2.  **🧠 Self-Healing AI**: Beyond simple reporting—Guardrails **automatically fixes** unsafe configurations and upgrades vulnerable dependencies.
-3.  **💰 Financial-Grade Shield**: The only framework capable of real-time interception of AI-triggered **transfers**, **payments**, and **wallet** operations requiring human approval.
-4.  **📡 Global Vulnerability Intelligence**: Deeply integrated with **CNVD**, **Google OSV**, **NIST NVD**, and **GitHub Advisory** global vulnerability databases.
+3.  **🩹 Security Baseline Guard**: Defines a "Golden Baseline". Any unauthorized modification of critical settings (like `authMode`) will be forcibly reverted.
+4.  **💰 Financial-Grade Shield**: Real-time semantic analysis to intercept AI-triggered **transfers**, **payments**, and **wallet** operations.
+5.  **📡 Global Intelligence**: Deeply integrated with **CNVD**, **Google OSV**, **NIST NVD**, and **GitHub Advisory** global vulnerability databases.
 
 ---
 
 ## 🔥 Feature Deep-Dive
 
-### 🕵️ 1. "Quad-Intelligence" Vulnerability Management (`vuln_scan.py`)
-Our engine performs deep scans using four authoritative intelligence sources:
--   **CNVD Integration**: Specialized audits against the China National Vulnerability Database.
--   **Global Intelligence Sync**: Real-time cross-referencing with major global vulnerability databases.
--   **Shadow Dependency Discovery**: Recursive parsing of `package.json` and `requirements.txt` to find hidden supply-chain risks.
+### 🛡️ 1. Active Defense & Baseline Self-Healing (`auto_fix.py`)
+-   **Golden Baseline Enforcement**: Strictly monitors `openclaw.json`. If `authMode` is downgraded or `systemRunApproval` is disabled, Guardrails instantly restores the secure state.
+-   **Config Realignment**: Automatically fixes unsafe settings (e.g., `groupPolicy="open"`) and creates timestamped snapshots in `backups/` before remediation.
 
-### 🩹 2. "Active Defense" Auto-Remediation (`auto_fix.py`)
-Stop manually tracking security logs. Guardrails acts as your automated Security SRE:
--   **Config Realignment**: Instantly closes unsafe settings (e.g., `groupPolicy="open"`) and corrects over-privileged policies.
--   **Snapshot Backups**: Creates a timestamped snapshot in `backups/` before every fix, ensuring one-click rollback.
+### 🕵️ 2. Deep Inspection & PII Sanitization (`sanitizer.py` / `vuln_scan.py`)
+-   **PII & Credential Sanitization**: Automatically identifies and redacts API Keys, Emails, Tokens, and IP addresses in logs and configs to prevent privacy leaks.
+-   **Supply Chain Vuln Loop**: `vuln_scan.py` directly consumes `sbom.json` for an automated "asset discovery" to "vulnerability matching" pipeline.
 
-### 🛡️ 3. Shield Mode (Real-time Governance & Interception)
-Protects your assets from accidental or malicious AI behaviors:
--   **Financial Interception**: Real-time blocking of transfers, payments, and wallet operations to prevent AI from being induced into unauthorized asset movement.
--   **Destructive Instruction Lockdown**: Hard-blocking of `rm -rf /` or `chmod 777` at the gateway layer.
+### 🛡️ 3. Shield Mode (Real-time Interception) (`threat_intel.py`)
+-   **Financial Transaction Interception**: Real-time detection and blocking of high-risk tool call intents like transfer, pay, and withdraw.
+-   **Destructive Instruction Lockdown**: Hard-blocks `rm -rf /` or `chmod 777` at the gateway layer.
+-   **Exfiltration Monitoring**: Monitors for suspicious `curl` uploads, `scp`, and reverse shell patterns (`bash -i`).
 
-### 📋 4. Enterprise Compliance & Asset Governance (`sbom.py` / `compliance_check.py`)
--   **SBOM (Software Bill of Materials)**: Generates a full inventory of components, enabling second-level location of "Log4j-style" vulnerabilities.
--   **Regulatory Compliance**: Pre-configured checks for regional cybersecurity standards (like MLPS 2.0).
--   **Config Drift Monitoring**: Tracks every change in `openclaw.json`. Know exactly *who* changed *what* and *when*.
+### 📋 4. Asset Governance & Compliance (`sbom.py` / `compliance_check.py`)
+-   **SBOM (Software Bill of Materials)**: Generates a full inventory of components, enabling rapid response to zero-day events.
+-   **Regulatory Compliance**: Pre-configured checks for international and regional cybersecurity standards (e.g., MLPS 2.0).
+-   **Config Drift Monitoring**: Tracks every change in `openclaw.json` with detailed audit logs.
 
-### 📊 5. Situational Awareness & Visualization (`risk_score.py` / `html_dashboard.py`)
+### 📊 5. Situational Awareness (`risk_score.py` / `html_dashboard.py`)
 -   **Dynamic Risk Scoring**: Translates complex security metrics into a simple 0-100 score.
 -   **Trend Analysis Dashboard**: Generates beautiful HTML reports with **10-day risk trends**.
 
 ---
 
 ## 🛠️ Engineering Highlights
-*   **Parallel Scanning**: Multi-process execution for zero-wait audits.
-*   **Data Redaction**: Automatically redacts PII and sensitive tokens from all reports.
-*   **Lifecycle Management**: Automated cleanup of old audit artifacts.
-
----
-
-## 📖 Roadmap
-- [x] Parallel Scanning & Quad-Intelligence Integration
-- [x] Risk Scoring & Trend Dashboard
-- [x] Auto-fix Remediation
-- [ ] **Cloud Sync**: Baseline synchronization across multiple nodes.
-- [ ] **ML Anomaly Detection**: Identifying suspicious prompt patterns with local models.
+*   **Parallel Execution**: Multi-process execution for zero-wait audits.
+*   **Data Redaction**: Automatically redacts sensitive information from all reports before saving.
+*   **Automated Lifecycle**: Auto-cleanup of redundant artifacts to save disk space.
 
 ---
 
