@@ -25,31 +25,36 @@ If you are using **OpenClaw**, leverage its intelligence to deploy a full enterp
 
 ---
 
-## 🏗️ System Architecture: Three-Pillar Defense
+## 🏗️ System Architecture: Three-Pillar Defense (Vertical Flow)
 
-Guardrails builds a closed-loop of **Monitor -> Decide -> Heal**:
-
-1.  **Shield Layer (Active Defense)**: Intercepts high-risk intents (transfers, deletions) and redacts sensitive info.
-2.  **Enforce Layer (Self-Healing)**: Forcibly reverts illegal config drifts based on a "Golden Baseline."
-3.  **Audit Layer (Intelligence)**: Performs quad-intelligence correlation scans to identify supply-chain vulnerabilities.
+本项目采用垂直分层架构，从入口到持久化层提供全方位保护：
 
 ```mermaid
 graph TD
-    subgraph "Active Defense (Shield Mode)"
-        A[Agent Action] --> B{Intent Analysis}
-        B -- Risky --> C[Block & Human Review]
-        B -- Safe --> D[Execute]
+    subgraph L1 [Layer 1: Active Defense - Shield Mode]
+        A[Agent Action Start] --> B{Intent Analysis}
+        B -- Risk Identified --> C[Block & Request Human Review]
+        B -- Safe Confirmed --> D[Execute Allowed]
     end
-    
-    subgraph "Self-Healing (Enforce Mode)"
-        E[Config Drift] --> F{Baseline Check}
-        F -- Violation --> G[Auto-Revert & Snapshot]
+
+    D --> E
+
+    subgraph L2 [Layer 2: Self-Healing - Enforce Mode]
+        E[Config Monitoring] --> F{Baseline Check}
+        F -- Unauthorized Drift --> G[Auto-Revert & Snapshot Backup]
+        F -- Baseline Compliant --> H[Keep Running]
     end
-    
-    subgraph "Deep Audit (Intelligence)"
-        H[SBOM Scan] --> I[Vulnerability Match]
-        I --> J[Risk Score Dashboard]
+
+    H --> I
+
+    subgraph L3 [Layer 3: Deep Audit - Intelligence]
+        I[SBOM Asset Inventory] --> J[Global Vuln Intel Correlation]
+        J --> K[Dynamic Risk Score Report]
     end
+
+    style L1 fill:#f9f,stroke:#333,stroke-width:2px
+    style L2 fill:#bbf,stroke:#333,stroke-width:2px
+    style L3 fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 ---
@@ -60,23 +65,16 @@ graph TD
 The only framework capable of understanding Agent intent at a semantic level:
 -   **Semantic Recognition**: Identifies hidden intents like `transfer`, `pay`, or `withdraw` in natural language.
 -   **Circuit Breaker**: Instantly cuts tool execution flows when risk is detected and requests admin approval.
--   **Context Awareness**: Distinguishes between legitimate queries and unauthorized asset movement.
 
 ### 🩹 2. Golden Baseline Enforcement
 Eliminates security gaps caused by "permission drift":
 -   **Strict Guarding**: Enforces core settings like `authMode: token` and `systemRunApproval: always`.
--   **Instant Reversion**: Auto-restores configurations within milliseconds of detecting a violation (e.g., `allowInsecure: true`).
--   **Snapshot Audit**: Maintains timestamped snapshots in `backups/` for forensic investigations.
+-   **Instant Reversion**: Auto-restores configurations within milliseconds of detecting a violation.
 
 ### 🕵️ 3. PII & Credential Sanitizer
 Ensures your API Keys don't become "public secrets":
 -   **Full-Spectrum Probe**: Scans `.env`, `.log`, and `.json` for keys, emails, IPs, and tokens.
 -   **Auto-Redaction**: Reports automatically replace sensitive data with `[REDACTED]` tokens.
-
-### 🔍 4. Supply Chain Loop (SBOM & Vuln)
-Deep inspection into the Skill ecosystem:
--   **Asset Inventory (SBOM)**: Generates standard Software Bill of Materials for all Skills and their transitive dependencies.
--   **Intelligence Sync**: Correlates findings with **CNVD**, **NVD**, **OSV**, and **GitHub Advisory**.
 
 ---
 
@@ -89,31 +87,26 @@ Guardrails helps organizations meet global cybersecurity standards:
 
 ---
 
+## 💡 Call for Contributions & Better Algorithms (Join Us!)
+
+**We believe that security is an endless game of wits.**
+
+We warmly welcome security experts, algorithm engineers, and community developers to provide better ways to harden this "Immune System". We are particularly focused on:
+1.  **More Accurate Intent Recognition Algorithms**: How to more effectively identify complex prompt injections or bypass attacks?
+2.  **More Efficient Self-Healing Mechanisms**: For large-scale distributed nodes, how to elegantly synchronize security policies?
+3.  **Zero-Trust Audit Models**: For dynamically loaded third-party tools, are there deeper sandbox audit solutions?
+
+If you have any ideas, feel free to submit an **Issue** or open a **Pull Request**! Every algorithm optimization you contribute will make the AI world safer.
+
+---
+
 ## 🛠️ Performance Benchmarks
 
 | Metric | Result | Description |
 | :--- | :--- | :--- |
 | **Full Audit Duration** | < 15s | Powered by Python multi-processing engine. |
 | **Self-Healing Latency** | < 100ms | Detection-to-reversion speed for critical drifts. |
-| **Memory Footprint** | ~50MB | Lightweight design; zero impact on OpenClaw performance. |
 | **Scanning Depth** | 5 Levels | Deeply identifies nested npm/pip shadow dependencies. |
-
----
-
-## 📖 Advanced Configuration: `guardrails.yaml`
-
-Customize your defense policies with ease:
-```yaml
-policies:
-  financial_protection:
-    enabled: true
-    threshold: 0.8  # Confidence for risk intent
-  config_baseline:
-    strict_mode: true
-    protected_keys: ["authMode", "groupPolicy"]
-  retention:
-    reports_days: 30 # Auto-cleanup artifacts older than 30 days
-```
 
 ---
 

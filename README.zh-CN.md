@@ -25,31 +25,36 @@
 
 ---
 
-## 🏗️ 系统架构：三位一体防御体系
+## 🏗️ 系统架构：三位一体防御体系 (Vertical Flow)
 
-Guardrails 不仅仅是一个扫描器，它构建了一个**监控 -> 决策 -> 自愈**的闭环：
-
-1.  **主动防御层 (Shield)**：拦截高危语义（转账、删除）、敏感信息脱敏。
-2.  **硬性守护层 (Enforce)**：基于“黄金镜像”强制回滚非法的配置变动。
-3.  **深度审计层 (Audit)**：四重情报关联扫描，识别供应链漏洞与系统缺陷。
+本项目采用垂直分层架构，从入口到持久化层提供全方位保护：
 
 ```mermaid
 graph TD
-    subgraph "Active Defense (Shield Mode)"
-        A[Agent Action] --> B{Intent Analysis}
-        B -- Risky --> C[Block & Human Review]
-        B -- Safe --> D[Execute]
+    subgraph L1 [第一层：主动防御 - Shield Mode]
+        A[Agent 动作发起] --> B{语义意图分析}
+        B -- 识别到风险 --> C[拦截并请求人工审批]
+        B -- 确认安全 --> D[允许执行]
     end
-    
-    subgraph "Self-Healing (Enforce Mode)"
-        E[Config Drift] --> F{Baseline Check}
-        F -- Violation --> G[Auto-Revert & Snapshot]
+
+    D --> E
+
+    subgraph L2 [第二层：配置自愈 - Enforce Mode]
+        E[系统配置监控] --> F{安全基线校验}
+        F -- 发现非法篡改 --> G[强制回滚与快照备份]
+        F -- 符合基线 --> H[保持运行]
     end
-    
-    subgraph "Deep Audit (Intelligence)"
-        H[SBOM Scan] --> I[Vulnerability Match]
-        I --> J[Risk Score Dashboard]
+
+    H --> I
+
+    subgraph L3 [第三层：深度审计 - Intelligence]
+        I[SBOM 资产盘点] --> J[全球漏洞情报比对]
+        J --> K[动态风险评分报告]
     end
+
+    style L1 fill:#f9f,stroke:#333,stroke-width:2px
+    style L2 fill:#bbf,stroke:#333,stroke-width:2px
+    style L3 fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 ---
@@ -66,17 +71,11 @@ graph TD
 防止“权限漂移”导致的安全黑洞：
 -   **黄金镜像**：强制执行 `authMode: token`, `systemRunApproval: always` 等核心配置。
 -   **即时回滚**：检测到配置被篡改后（如 `allowInsecure: true`），微秒级自动恢复。
--   **备份追溯**：在 `backups/` 中保留所有变动的快照，方便回溯调查。
 
 ### 🕵️ 3. 隐私与凭据扫描仪 (PII Sanitizer)
 防止您的 API Key 成为“公开的秘密”：
 -   **全量探测**：扫描 `.env`, `.log`, `.json` 中的秘钥、邮箱、IP 及 Token。
 -   **自动脱敏**：生成审计报告时自动对敏感数据进行 `[REDACTED]` 处理。
-
-### 🔍 4. 供应链闭环审计 (SBOM & Vuln Loop)
-针对 Skill 生态的深度穿透：
--   **自动资产盘点 (SBOM)**：生成标准的软件物料清单，涵盖所有 Skill 及其底层依赖。
--   **四重情报比对**：关联 **CNVD** (国家漏洞库)、**NVD**、**OSV** 及 **GitHub Advisory**。
 
 ---
 
@@ -89,38 +88,33 @@ Guardrails 旨在帮助企业快速满足主流安全标准：
 
 ---
 
+## 💡 征集更好的方案与算法 (Join Us!)
+
+**我们相信，安全是一个永无止境的博弈过程。**
+
+我们热忱欢迎安全专家、算法工程师和社区开发者提供更好的方式来加固这个“免疫系统”。我们特别关注：
+1.  **更精准的语义分析算法**：如何更有效地识别复杂的提示词注入或绕过攻击？
+2.  **更高效的自愈机制**：对于大规模分布式节点，如何更优雅地同步安全策略？
+3.  **零信任审计模型**：针对动态加载的第三方工具，是否有更深层的沙箱审计方案？
+
+如果您有任何想法，欢迎提交 **Issue** 或发起 **Pull Request**！您的每一个算法优化都将让 AI 的世界更安全。
+
+---
+
 ## 🛠️ 技术指标 (Benchmarks)
 
 | 指标 | 表现 | 说明 |
 | :--- | :--- | :--- |
 | **全量审计耗时** | < 15s | 基于 Python 多进程并行扫描引擎。 |
 | **配置自愈时延** | < 100ms | 检测到变动后的自动恢复速度。 |
-| **内存占用** | ~50MB | 极轻量化设计，不影响 OpenClaw 主进程性能。 |
 | **扫描深度** | 递归 5 层 | 深度识别嵌套的 npm/pip 影子依赖。 |
 
 ---
 
-## 📖 进阶配置：`guardrails.yaml`
-
-您可以根据需求定制防御策略：
-```yaml
-policies:
-  financial_protection:
-    enabled: true
-    threshold: 0.8  # 风险语义置信度
-  config_baseline:
-    strict_mode: true
-    protected_keys: ["authMode", "groupPolicy"]
-  retention:
-    reports_days: 30 # 自动清理 30 天前的报告
-```
-
----
-
-## 🤝 社区与路线图 (Roadmap)
+## 🤝 路线图 (Roadmap)
 - [x] v1.1 并行执行引擎与配置自愈
 - [x] 金融级语义拦截与 PII 脱敏
-- [ ] **分布式防护**：支持多 OpenClaw 节点联邦安全审计。
+- [ ] **多端同步**：支持多 OpenClaw 节点联邦安全审计。
 - [ ] **Agent 行为画像**：基于机器学习识别异常操作序列。
 
 ---
