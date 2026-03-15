@@ -1,7 +1,7 @@
 ---
 name: openclaw-guardrails
 description: The "Immune System" for OpenClaw. High-performance parallel scanning, risk scoring (0-100), MLPS 2.0 compliance, and self-healing auto-fix.
-version: 1.1.0
+version: 1.0.0
 metadata:
   {
     "clawdbot":
